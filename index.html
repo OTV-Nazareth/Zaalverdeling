@@ -255,11 +255,12 @@ label:first-child{margin-top:0}
     <div class="section-title" style="color:#92400e">⚙️ Supabase configuratie</div>
     <p style="font-size:12px;color:#92400e;margin-bottom:8px">Vul je Supabase gegevens in de HTML in (bovenaan het &lt;script&gt; blok):</p>
     <code style="font-size:11px;background:#fef3c7;padding:8px 12px;border-radius:6px;display:block;line-height:1.8">
-      SUPABASE_URL = 'https://abcdef.supabase.co'<br>
-      SUPABASE_ANON_KEY = 'eyJksqhlfa'<br>
-      CLUB_WACHTWOORD = 'Julliewachtwoord'
+      SUPABASE_URL = 'https://ijrngudscnyeftqmfhfi.supabase.co'<br>
+      SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqcm5ndWRzY255ZWZ0cW1maGZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzMyNzUsImV4cCI6MjA5NjE0OTI3NX0.mx_ATF2H78ZKP_Zo4nnl3Wyk-tbZaL43-4iRpmTI6Tc'<br>
+      CLUB_WACHTWOORD = 'Toestelverdeling2027'
     </code>
     <p style="font-size:11px;color:#92400e;margin-top:8px">Voer ook de SQL uit in je Supabase project (zie de meegeleverde SQL file).</p>
+    <button class="btn btn-sm" onclick="openConfigModal()" style="margin-top:8px">⚙️ Configuratie instellen</button>
   </div>
 </div>
 </div>
@@ -409,6 +410,7 @@ function showTab(n){
   document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['start','groepen','regels','rooster','validatie','export'][i]===n));
   if(n==='rooster')renderRooster();if(n==='validatie')renderValidatie();
   if(n==='regels')renderRegels();if(n==='groepen')renderGroepen();if(n==='start')renderStartStats();
+  if(n==='export')renderCloudList();
 }
 
 // ── GROEPEN ──
@@ -1221,11 +1223,26 @@ function saveCombo(){
 
 
 // ═══════════════════════════════════════════
-// SUPABASE CONFIG — vul hieronder jouw gegevens in
+// SUPABASE CONFIG — kan ook via de UI ingesteld worden
 // ═══════════════════════════════════════════
-const SUPABASE_URL = 'https://ijrngudscnyeftqmfhfi.supabase.co';      // bv. https://xxxx.supabase.co
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqcm5ndWRzY255ZWZ0cW1maGZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzMyNzUsImV4cCI6MjA5NjE0OTI3NX0.mx_ATF2H78ZKP_Zo4nnl3Wyk-tbZaL43-4iRpmTI6Tc'; // jouw anon/public key
-const CLUB_WACHTWOORD = 'Toestelverdeling2027';   // gedeeld wachtwoord voor de club
+let SUPABASE_URL = '';
+let SUPABASE_ANON_KEY = '';
+let CLUB_WACHTWOORD = '';
+
+function loadConfig(){
+  try{
+    const c=JSON.parse(localStorage.getItem('zaalverdeling_config')||'{}');
+    SUPABASE_URL=c.url||'';
+    SUPABASE_ANON_KEY=c.key||'';
+    CLUB_WACHTWOORD=c.pw||'';
+  }catch(e){}
+}
+function saveConfig(url,key,pw){
+  localStorage.setItem('zaalverdeling_config',JSON.stringify({url,key,pw}));
+  SUPABASE_URL=url;SUPABASE_ANON_KEY=key;CLUB_WACHTWOORD=pw;
+  _supaClient=null;_supaReady=false;_authenticated=false;
+  initSupabase();
+}
 
 let _supaReady = false;
 let _supaClient = null;
@@ -1249,12 +1266,49 @@ function initSupabase(){
 
 // ── Auth: simple club password check ──
 let _authenticated = false;
+
+function openConfigModal(){
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">⚙️ Supabase configuratie</div>
+    <p style="font-size:13px;color:#666;margin-bottom:1rem">Vul je Supabase gegevens in. Deze worden lokaal opgeslagen in je browser.</p>
+    <label>Supabase URL</label>
+    <input id="cfg-url" value="${SUPABASE_URL}" placeholder="https://xxxx.supabase.co">
+    <label>Anon/Public Key</label>
+    <input id="cfg-key" value="${SUPABASE_ANON_KEY}" placeholder="eyJ..." style="font-size:11px">
+    <label>Clubwachtwoord <span style="font-size:10px;color:#aaa">(gedeeld met alle beheerders)</span></label>
+    <input id="cfg-pw" type="password" value="${CLUB_WACHTWOORD}" placeholder="laat leeg voor geen beveiliging">
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px;margin-top:12px;font-size:11px;color:#166534">
+      <b>Waar vind je deze gegevens?</b><br>
+      Supabase.com → jouw project → Project Settings → API<br>
+      Kopieer "Project URL" en "anon public" key.
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Annuleer</button>
+      <button class="btn btn-primary" onclick="doSaveConfig()">✓ Opslaan</button>
+    </div>
+  </div></div>`;
+}
+function doSaveConfig(){
+  const url=document.getElementById('cfg-url').value.trim();
+  const key=document.getElementById('cfg-key').value.trim();
+  const pw=document.getElementById('cfg-pw').value;
+  if(!url||!key){alert('URL en Key zijn verplicht.');return;}
+  saveConfig(url,key,pw);
+  closeModal();
+  showCloudStatus('✅ Configuratie opgeslagen!','#16a34a');
+  renderCloudList();
+}
+
 function checkAuth(){
-  if(!CLUB_WACHTWOORD) return true; // no password set = open
+  if(!SUPABASE_URL||!SUPABASE_ANON_KEY){
+    openConfigModal();return false;
+  }
+  if(!CLUB_WACHTWOORD){_authenticated=true;return true;}
   if(_authenticated) return true;
-  const pw = prompt('Clubwachtwoord:');
-  if(pw === CLUB_WACHTWOORD){ _authenticated = true; return true; }
-  alert('Verkeerd wachtwoord.'); return false;
+  const pw=prompt('Clubwachtwoord:');
+  if(pw===CLUB_WACHTWOORD){_authenticated=true;return true;}
+  alert('Verkeerd wachtwoord.');return false;
 }
 
 // ── Cloud: laad roosters lijst ──
@@ -1390,6 +1444,7 @@ async function doDeleteCloud(id,naam){
   else showCloudStatus('❌ Verwijderen mislukt.','#dc2626');
 }
 
+loadConfig();
 renderSchemas();
 initSupabase();
 </script>
