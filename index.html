@@ -9,7 +9,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;color:#1a1a1a;font-size:14px;background:#f2f1ed;min-height:100vh}
-.app{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.app{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 4rem}
 h1{font-size:20px;font-weight:500;margin-bottom:.25rem}
 .subtitle{font-size:13px;color:#888;margin-bottom:1.5rem}
 .tabs{display:flex;gap:2px;border-bottom:1px solid #ddd;margin-bottom:1.5rem;overflow-x:auto}
@@ -97,6 +97,15 @@ label:first-child{margin-top:0}
 .cr-err{background:#fee2e2;color:#991b1b}.cr-warn{background:#fef9c3;color:#854d0e}.cr-info{background:#eff6ff;color:#1e40af}
 .dag-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;background:#f9f9f7;border-radius:6px;padding:4px 8px}
 .cel-selected{outline:2px solid #1a1a1a;outline-offset:1px}
+
+#autosaveBar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:1px solid #e0e0d8;
+  padding:6px 16px;
+  display:flex;align-items:center;gap:10px;
+  font-size:11px;z-index:50;
+  box-shadow:0 -2px 8px rgba(0,0,0,.06);
+}
 </style>
 </head>
 <body>
@@ -219,6 +228,11 @@ label:first-child{margin-top:0}
     <div style="display:flex;align-items:center;gap:4px">
       <span style="font-size:11px;color:#888">Breedte:</span>
       <input type="range" id="colWidthSlider" min="50" max="160" value="80" style="width:80px" oninput="setColWidth(this.value)">
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;border-left:1px solid #e0e0d8;padding-left:8px">
+      <span style="font-size:11px;color:#888">Vrij:</span>
+      <button class="btn btn-sm" id="vrijToggleBtn" onclick="toggleVrijKolom()" title="Vrije kolom tonen/verbergen" style="padding:2px 8px;font-size:11px">👁</button>
+      <input type="range" id="vrijWidthSlider" min="60" max="300" value="110" style="width:70px" oninput="setVrijWidth(this.value)" title="Breedte vrije kolom">
     </div>
   </div>
   <div class="rooster-scroll" id="roosterScroll">
@@ -732,7 +746,7 @@ function renderRooster(){
     html+='</tr>';
   });
   tbl.innerHTML=html+'</tbody>';
-  setTimeout(()=>{renderVrijToestellen();renderConflictPanel();applyColWidths();},0);
+  setTimeout(()=>{renderVrijToestellen();renderConflictPanel();applyColWidths();applyVrijStyle();},0);
 }
 
 function openCelModal(dag,gid,t){
@@ -1477,6 +1491,8 @@ async function doSaveCloud(existingId){
   const result=await saveRoosterCloud(naam,seizoen,beschr,auteur,existingId||null);
   closeModal();
   if(result){
+    _autosaveId=result.id;_autosaveName=result.naam;_autosaveDirty=false;
+    updateAutosaveStatus('✅ Opgeslagen: '+naam,'#16a34a');
     showCloudStatus(`✅ Opgeslagen: "${naam}"`,'#16a34a');
     renderCloudList();renderStartCloudList();
   } else {
@@ -1522,6 +1538,8 @@ async function doLoadCloud(id,naam){
   if(r.state_json&&r.state_json.regels&&!r.state_json.regels.optioneel)
     r.state_json.regels.optioneel=JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL));
   state=r.state_json;
+  _autosaveId=id;_autosaveName=naam;_autosaveDirty=false;
+  updateAutosaveStatus('📂 Geladen: '+naam,'#16a34a');
   showCloudStatus(`✅ Geladen: "${naam}"`,'#16a34a');
   showTab('groepen');
 }
@@ -1536,7 +1554,121 @@ async function doDeleteCloud(id,naam){
 
 loadConfig();
 renderSchemas();
+
+let _vrijVisible = true;
+let _vrijWidth = 110;
+
+function toggleVrijKolom(){
+  _vrijVisible = !_vrijVisible;
+  const btn = document.getElementById('vrijToggleBtn');
+  const slider = document.getElementById('vrijWidthSlider');
+  if(btn) btn.style.opacity = _vrijVisible ? '1' : '.4';
+  if(slider) slider.disabled = !_vrijVisible;
+  applyVrijStyle();
+}
+
+function setVrijWidth(val){
+  _vrijWidth = parseInt(val);
+  applyVrijStyle();
+}
+
+function applyVrijStyle(){
+  const tbl = document.getElementById('roosterTable');
+  if(!tbl) return;
+  // The vrij column is the 2nd th/td in each row
+  tbl.querySelectorAll('thead tr th:nth-child(2), tbody tr td:nth-child(2)').forEach(el=>{
+    el.style.display = _vrijVisible ? '' : 'none';
+    if(_vrijVisible){
+      el.style.minWidth = _vrijWidth + 'px';
+      el.style.maxWidth = (_vrijWidth + 40) + 'px';
+    }
+  });
+}
+
+
+// ═══════════════════════════════════════════
+// AUTOSAVE
+// ═══════════════════════════════════════════
+let _autosaveTimer = null;
+let _autosaveId = null;      // ID van het huidig geladen rooster (voor overschrijven)
+let _autosaveName = null;    // Naam van het huidig geladen rooster
+let _autosaveDirty = false;  // Zijn er onopgeslagen wijzigingen?
+
+function markDirty(){
+  _autosaveDirty = true;
+  updateAutosaveStatus('⏳ Onopgeslagen wijzigingen…', '#d97706');
+  clearTimeout(_autosaveTimer);
+  _autosaveTimer = setTimeout(autosaveNow, 2000); // 2s debounce
+}
+
+async function autosaveNow(){
+  if(!_autosaveDirty) return;
+  if(!SUPABASE_URL||!SUPABASE_ANON_KEY) return; // niet geconfigureerd
+  if(!_autosaveId&&!_autosaveName){
+    // Eerste keer: vraag naam
+    updateAutosaveStatus('💾 Opslaan? Geef een naam via Export → Opslaan', '#888');
+    return;
+  }
+  updateAutosaveStatus('💾 Opslaan…', '#888');
+  const naam = _autosaveName || 'Autosave';
+  const result = await saveRoosterCloud(naam, '', '', '', _autosaveId||null);
+  if(result){
+    _autosaveId = result.id;
+    _autosaveName = result.naam;
+    _autosaveDirty = false;
+    updateAutosaveStatus(`✅ Opgeslagen: ${naam} — ${new Date().toLocaleTimeString('nl-BE')}`, '#16a34a');
+    renderStartCloudList();
+  } else {
+    updateAutosaveStatus('❌ Autosave mislukt', '#dc2626');
+  }
+}
+
+function updateAutosaveStatus(msg, color){
+  const el = document.getElementById('autosaveStatus');
+  if(el){ el.textContent = msg; el.style.color = color; }
+}
+
+// Hook markDirty into setA (rooster changes)
+const _origSetA = setA;
+function setA(d,gid,t,ts,isOpw,isCool){
+  _origSetA(d,gid,t,ts,isOpw,isCool);
+  markDirty();
+}
+
+// Hook markDirty into saveGroep (group changes)
+const _origSaveGroep = saveGroep;
+function saveGroep(id){
+  _origSaveGroep(id);
+  markDirty();
+}
+
+// Set autosave context when loading from cloud
+const _origDoLoadCloud = doLoadCloud;
+async function doLoadCloud(id, naam){
+  await _origDoLoadCloud(id, naam);
+  _autosaveId = id;
+  _autosaveName = naam;
+  _autosaveDirty = false;
+  updateAutosaveStatus(`📂 Geladen: ${naam}`, '#16a34a');
+}
+
+// Set autosave context when saving manually
+const _origDoSaveCloud = doSaveCloud;
+async function doSaveCloud(existingId){
+  await _origDoSaveCloud(existingId);
+  // After save, update autosave context from the saved result
+  // (doSaveCloud sets _autosaveId internally via saveRoosterCloud)
+  _autosaveDirty = false;
+}
+
 initSupabase();
 </script>
+
+<div id="autosaveBar">
+  <span id="autosaveStatus" style="color:#bbb">Geen wijzigingen</span>
+  <button class="btn btn-sm" onclick="autosaveNow()" style="padding:2px 8px;font-size:11px" title="Nu opslaan">💾 Nu opslaan</button>
+  <button class="btn btn-sm" onclick="openSaveModal(_autosaveId,{naam:_autosaveName||''})" style="padding:2px 8px;font-size:11px" title="Opslaan als…">📋 Opslaan als…</button>
+</div>
+
 </body>
 </html>
