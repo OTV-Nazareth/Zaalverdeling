@@ -44,7 +44,7 @@ label{font-size:12px;color:#666;display:block;margin-bottom:3px;margin-top:10px}
 label:first-child{margin-top:0}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100}
-.modal{background:#fff;border-radius:12px;padding:1.5rem;width:94%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal{background:#fff;border-radius:14px;padding:1.5rem;width:94%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.18)}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:1rem}
 .timetable{border-collapse:collapse;font-size:12px;min-width:500px}
 .timetable th{background:#f5f5f0;padding:5px 4px;text-align:center;border:1px solid #e0e0d8;font-weight:500;font-size:11px}
@@ -54,7 +54,7 @@ label:first-child{margin-top:0}
 .timetable td.ti{background:#f9f9f7}
 .timetable td.tw{background:#fff0f0}
 .timetable td.cl:hover{background:#eff6ff;cursor:pointer}
-.slot{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;white-space:nowrap}
+.slot{display:inline-block;padding:3px 7px;border-radius:6px;font-size:11px;white-space:nowrap;font-weight:500}
 .slot-comp{background:#dbeafe;color:#1e40af}
 .slot-recrea{background:#dcfce7;color:#166534}
 .slot-tumbling{background:#fde8d8;color:#9a3412}
@@ -90,6 +90,7 @@ label:first-child{margin-top:0}
 .cr-item{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;font-size:12px;border-radius:6px;margin-bottom:3px}
 .cr-err{background:#fee2e2;color:#991b1b}.cr-warn{background:#fef9c3;color:#854d0e}.cr-info{background:#eff6ff;color:#1e40af}
 .dag-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;background:#f9f9f7;border-radius:6px;padding:4px 8px}
+.cel-selected{outline:2px solid #1a1a1a;outline-offset:1px}
 </style>
 </head>
 <body>
@@ -603,7 +604,10 @@ function renderRooster(){
   html+='</tr></thead><tbody>';
   times.forEach(t=>{
         const activeG=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
-    const smallestG=activeG.length?Math.min(...activeG.map(g=>g.gymnasten)):1;
+    // Smallest group that does NOT yet have an assignment at this time slot
+    const unassignedG=activeG.filter(g=>!getA(dag,g.id,t));
+    const smallestG=unassignedG.length?Math.min(...unassignedG.map(g=>g.gymnasten))
+                   :activeG.length?Math.min(...activeG.map(g=>g.gymnasten)):1;
     const vrijNu=TOESTELLEN.filter(ts=>totOp(dag,t,ts)+smallestG<=(state.regels.capaciteit[ts]||99));
     const vrijHtml=vrijNu.map(ts=>`<span class="slot ${TS_CLASS[ts]||''}" style="font-size:9px;padding:1px 4px;margin:1px;display:inline-block">${SHORT[ts]}</span>`).join('');
     html+=`<tr><td class="tc">${t}</td><td style="padding:2px 4px;vertical-align:middle;border:1px solid #e8e8e4;background:#fafaf8">${vrijHtml}</td>`;
@@ -624,38 +628,90 @@ function openCelModal(dag,gid,t){
   const g=state.groepen.find(x=>x.id===gid);
   const a=getA(dag,gid,t);
   const verplicht=getVerplicht(g);
-  const optioneel=state.regels.optioneel[g.groepType]||[];
+  const optioneel=(state.regels.optioneel||{})[g.groepType]||[];
   const toegestaan=new Set([...verplicht,...optioneel]);
-  function makeOpt(ts,label){
+
+  function makeBtn(ts,label,group){
     const tot=totOp(dag,t,ts),max=state.regels.capaciteit[ts]||99;
-    const pct=Math.min(100,Math.round(tot/max*100)),full=tot+g.gymnasten>max;
-    return `<option value="${ts}" ${a&&a.toestel===ts?"selected":""} ${full?"style=\"color:#dc2626\"":""}>${label||displayTs(ts)} — ${tot}/${max} (${pct}%)${full?" X":""}</option>`;
+    const pct=Math.min(100,Math.round(tot/max*100));
+    const full=tot+g.gymnasten>max;
+    const isSelected=a&&a.toestel===ts;
+    const cls=TS_CLASS[ts]||'ts-tu';
+    const border=isSelected?'3px solid #1a1a1a':full?'2px solid #dc2626':'1px solid transparent';
+    const opacity=full?'.5':'1';
+    return `<button onclick="selectCelTs('${ts}')" data-ts="${ts}"
+      style="padding:4px 10px;border-radius:7px;border:${border};font-size:11px;cursor:pointer;opacity:${opacity};text-align:left;display:flex;flex-direction:column;gap:1px"
+      class="${cls}${isSelected?' cel-selected':''}">
+      <span style="font-weight:600">${label||SHORT[ts]||ts}</span>
+      <span style="font-size:9px;opacity:.8">${tot}/${max}${full?' ⛔':''}</span>
+    </button>`;
   }
-  const vOpts=verplicht.map(ts=>makeOpt(ts)).join("");
-  const oOpts=optioneel.filter(t=>!verplicht.includes(t)).map(ts=>makeOpt(ts)).join("");
-  const eOpts=TOESTELLEN.filter(ts=>!toegestaan.has(ts)).map(ts=>makeOpt(ts,displayTs(ts)+" *")).join("");
-  const combosAvail=(state.regels.combos||[]).filter(c=>totOp(dag,t,c.a)+g.gymnasten<=(state.regels.capaciteit[c.a]||99)&&totOp(dag,t,c.b)+g.gymnasten<=(state.regels.capaciteit[c.b]||99));
-  const cOpts=combosAvail.length?"<optgroup label=\"Combis\">"+ combosAvail.map(c=>`<option value="COMBO:${c.a}+${c.b}" ${a&&a.toestel==="COMBO:"+c.a+"+"+c.b?"selected":""}>${(SHORT[c.a]||c.a)+"+"+(SHORT[c.b]||c.b)}</option>`).join("")+"</optgroup>":"";
-  const allOpts=(vOpts?"<optgroup label=\"Verplicht\">"+vOpts+"</optgroup>":"")+(oOpts?"<optgroup label=\"Optioneel\">"+oOpts+"</optgroup>":"")+cOpts+(eOpts?"<optgroup label=\"Extra (buiten regels) *\">"+eOpts+"</optgroup>":"");
-  document.getElementById("modalContainer").innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:380px">
-    <div class="modal-title">${esc(g.naam)} — ${dag} ${t}</div>
-    <label>Toestel</label><select id="cT" size="8" style="height:auto">${allOpts}</select>
-    <p style="font-size:11px;color:#888;margin-top:5px">* = buiten regels.</p>
-    <label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer"><input type="checkbox" id="cOpw" ${a&&a.isOpwarming?"checked":""}> Opwarming</label>
-    <label style="display:flex;align-items:center;gap:6px;margin-top:4px;cursor:pointer"><input type="checkbox" id="cCool" ${a&&a.isCooldown?"checked":""}> Cooldown</label>
+
+  function makeSection(title, items){
+    if(!items.length) return '';
+    return `<div style="margin-bottom:10px">
+      <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">${title}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${items}</div>
+    </div>`;
+  }
+
+  const vBtns=verplicht.map(ts=>makeBtn(ts)).join('');
+  const oBtns=optioneel.filter(t=>!verplicht.includes(t)).map(ts=>makeBtn(ts)).join('');
+  const eBtns=TOESTELLEN.filter(ts=>!toegestaan.has(ts)).map(ts=>makeBtn(ts,SHORT[ts]+'★')).join('');
+
+  const combosAvail=(state.regels.combos||[]).filter(c=>
+    totOp(dag,t,c.a)+g.gymnasten<=(state.regels.capaciteit[c.a]||99)&&
+    totOp(dag,t,c.b)+g.gymnasten<=(state.regels.capaciteit[c.b]||99));
+  const cBtns=combosAvail.map(c=>{
+    const key=`COMBO:${c.a}+${c.b}`;
+    const isSelected=a&&a.toestel===key;
+    const border=isSelected?'3px solid #1a1a1a':'1px solid #d8b4fe';
+    return `<button onclick="selectCelTs('${key}')" data-ts="${key}"
+      style="padding:4px 10px;border-radius:7px;border:${border};font-size:11px;cursor:pointer;background:#f5e6ff;color:#6b21a8;display:flex;flex-direction:column;gap:1px">
+      <span style="font-weight:600">${SHORT[c.a]||c.a}+${SHORT[c.b]||c.b}</span>
+      <span style="font-size:9px;opacity:.8">combo</span>
+    </button>`;
+  }).join('');
+
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">${esc(g.naam)} <span style="color:#888;font-weight:400;font-size:14px">— ${dag} ${t}</span></div>
+    <input type="hidden" id="celTsVal" value="${a?a.toestel:''}">
+    ${makeSection('Verplicht',vBtns)}
+    ${oBtns?makeSection('Optioneel',oBtns):''}
+    ${cBtns?makeSection('Combis',cBtns):''}
+    ${eBtns?`<details style="margin-bottom:10px"><summary style="font-size:11px;color:#888;cursor:pointer">Extra (buiten regels ★)</summary><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">${eBtns}</div></details>`:''}
+    <div style="display:flex;gap:12px;margin-top:4px">
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;margin:0">
+        <input type="checkbox" id="cOpw" ${a&&a.isOpwarming?'checked':''}> Opwarming
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;margin:0">
+        <input type="checkbox" id="cCool" ${a&&a.isCooldown?'checked':''}> Cooldown
+      </label>
+    </div>
     <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end">
-      ${a?`<button class="btn btn-danger btn-sm" onclick="setA('${dag}',${gid},'${t}',null);closeModal();renderRooster()">Verwijder</button>`:""}
+      ${a?`<button class="btn btn-danger btn-sm" onclick="setA('${dag}',${gid},'${t}',null);closeModal();renderRooster()">🗑 Verwijder</button>`:''}
       <button class="btn" onclick="closeModal()">Annuleer</button>
       <button class="btn btn-primary" onclick="saveCelModal('${dag}',${gid},'${t}')">Opslaan</button>
     </div>
   </div></div>`;
 }
+function selectCelTs(ts){
+  document.getElementById('celTsVal').value=ts;
+  document.querySelectorAll('[data-ts]').forEach(b=>{
+    const sel=b.dataset.ts===ts;
+    b.style.border=sel?'3px solid #1a1a1a':(b.style.border.includes('dc2626')?'2px solid #dc2626':'1px solid transparent');
+    if(sel)b.classList.add('cel-selected');else b.classList.remove('cel-selected');
+  });
+}
 function saveCelModal(dag,gid,t){
-  const ts=document.getElementById("cT").value;
-  const isOpw=document.getElementById("cOpw")&&document.getElementById("cOpw").checked||false;
-  const isCool=document.getElementById("cCool")&&document.getElementById("cCool").checked||false;
+  const ts=document.getElementById('celTsVal').value;
+  if(!ts){closeModal();return;}
+  const isOpw=document.getElementById('cOpw')?.checked||false;
+  const isCool=document.getElementById('cCool')?.checked||false;
   setA(dag,gid,t,ts,isOpw,isCool);closeModal();renderRooster();
 }
+
 
 
 // ── VALIDATIE ──
@@ -1094,7 +1150,13 @@ function renderVrijToestellen(){
   panel.innerHTML='<div style="margin-top:6px"><div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Toestelbezetting</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+TOESTELLEN.map(ts=>{
     const max=state.regels.capaciteit[ts]||99;
     const overSlots=times.filter(t=>totOp(dag,t,ts)>max).length;
-    const hasRoomSlots=times.filter(t=>{const ag=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));const sm=ag.length?Math.min(...ag.map(g=>g.gymnasten)):1;return totOp(dag,t,ts)+sm<=max;}).length;
+    const hasRoomSlots=times.filter(t=>{
+      const ag=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
+      const unassigned=ag.filter(g=>!getA(dag,g.id,t));
+      const sm=unassigned.length?Math.min(...unassigned.map(g=>g.gymnasten))
+              :ag.length?Math.min(...ag.map(g=>g.gymnasten)):1;
+      return totOp(dag,t,ts)+sm<=max;
+    }).length;
     const roomPct=times.length?Math.round(hasRoomSlots/times.length*100):100;
     const maxNow=times.reduce((mx,t)=>Math.max(mx,totOp(dag,t,ts)),0);
     const cls=TS_CLASS[ts]||'ts-tu';
