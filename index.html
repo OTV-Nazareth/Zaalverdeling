@@ -505,7 +505,12 @@ function openGroepModal(id){
       <div><label>Aantal gymnasten</label><input id="mG" type="number" min="1" value="${g?g.gymnasten:10}"></div>
       <div><label>Trainer(s)</label><input id="mTr" value="${g?esc(g.trainer||''):''}" placeholder="bv. Sarah, Tom"></div>
     </div>
-    <label style="margin-top:10px">Trainingsdagen & tijden</label>
+    <div class="form-row" style="margin-top:10px">
+      <div><label>Standaard start</label><input id="mS" type="time" value="${defaultStart}"></div>
+      <div><label>Standaard einde</label><input id="mE" type="time" value="${defaultEind}"></div>
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:3px">Vul per dag een afwijkende tijd in als die verschilt van de standaard.</p>
+    <label style="margin-top:8px">Trainingsdagen & tijden</label>
     <div style="margin:6px 0 4px">${dchecks}</div>
     <div id="dagTimeRows" style="margin-top:4px">${dagRows}</div>
     <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end"><button class="btn" onclick="closeModal()">Annuleer</button><button class="btn btn-primary" onclick="saveGroep(${g?g.id:'null'})">${g?'Opslaan':'Toevoegen'}</button></div>
