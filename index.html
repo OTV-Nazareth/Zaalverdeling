@@ -58,36 +58,6 @@ label:first-child{margin-top:0}
 .slot-comp{background:#dbeafe;color:#1e40af}
 .slot-recrea{background:#dcfce7;color:#166534}
 .slot-tumbling{background:#fde8d8;color:#9a3412}
-/* Toestel kleuren */
-.ts-vloer      {background:#dbeafe;color:#1e3a5f}
-.ts-brug       {background:#fce7f3;color:#831843}
-.ts-rek        {background:#fdf4ff;color:#6b21a8}
-.ts-balk       {background:#dcfce7;color:#14532d}
-.ts-sprong     {background:#fef9c3;color:#713f12}
-.ts-trampo     {background:#ffedd5;color:#7c2d12}
-.ts-tu         {background:#f1f5f9;color:#1e293b}
-.ts-hbrug      {background:#e0f2fe;color:#0c4a6e}
-.ts-ringen     {background:#f0fdf4;color:#052e16}
-.ts-paard      {background:#fdf2f8;color:#500724}
-
-/* Gedeeld: donkerdere versie */
-.ts-vloer.shared      {background:#93c5fd;color:#1e3a5f}
-.ts-brug.shared       {background:#f9a8d4;color:#831843}
-.ts-rek.shared        {background:#e9d5ff;color:#6b21a8}
-.ts-balk.shared       {background:#86efac;color:#14532d}
-.ts-sprong.shared     {background:#fde047;color:#713f12}
-.ts-trampo.shared     {background:#fdba74;color:#7c2d12}
-.ts-tu.shared         {background:#cbd5e1;color:#1e293b}
-.ts-hbrug.shared      {background:#7dd3fc;color:#0c4a6e}
-.ts-ringen.shared     {background:#bbf7d0;color:#052e16}
-.ts-paard.shared      {background:#f5d0fe;color:#500724}
-
-/* Probleem: rode rand */
-.ts-cap-err   {outline:2px solid #dc2626!important;outline-offset:-2px}
-
-/* Opwarming / cooldown override */
-.slot-opw  {background:#f0fdf4!important;color:#166534!important;border:1px dashed #86efac}
-.slot-cool {background:#faf5ff!important;color:#6b21a8!important;border:1px dashed #d8b4fe}
 .slot-empty{color:#ccc;font-size:11px}
 .warn-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f2f1ed}
 .warn-item:last-child{border-bottom:none}
@@ -103,9 +73,23 @@ label:first-child{margin-top:0}
 .cr-warn{background:#fef9c3;color:#854d0e}
 .cr-info{background:#eff6ff;color:#1e40af}
 
-.slot-drag{cursor:grab}
-.cell-dragging{opacity:.5}
+.ts-vloer{background:#dbeafe;color:#1e3a5f}.ts-vloer.shared{background:#93c5fd;color:#1e3a5f}
+.ts-brug{background:#fce7f3;color:#831843}.ts-brug.shared{background:#f9a8d4;color:#831843}
+.ts-rek{background:#fdf4ff;color:#6b21a8}.ts-rek.shared{background:#e9d5ff;color:#6b21a8}
+.ts-balk{background:#dcfce7;color:#14532d}.ts-balk.shared{background:#86efac;color:#14532d}
+.ts-sprong{background:#fef9c3;color:#713f12}.ts-sprong.shared{background:#fde047;color:#713f12}
+.ts-trampo{background:#ffedd5;color:#7c2d12}.ts-trampo.shared{background:#fdba74;color:#7c2d12}
+.ts-tu{background:#f1f5f9;color:#1e293b}.ts-tu.shared{background:#cbd5e1;color:#1e293b}
+.ts-hbrug{background:#e0f2fe;color:#0c4a6e}.ts-hbrug.shared{background:#7dd3fc;color:#0c4a6e}
+.ts-ringen{background:#f0fdf4;color:#052e16}.ts-ringen.shared{background:#bbf7d0;color:#052e16}
+.ts-paard{background:#fdf2f8;color:#500724}.ts-paard.shared{background:#f5d0fe;color:#500724}
+.ts-cap-err{outline:2px solid #dc2626!important;outline-offset:-2px}
+.slot-opw{background:#f0fdf4!important;color:#166534!important;border:1px dashed #86efac}
+.slot-cool{background:#faf5ff!important;color:#6b21a8!important;border:1px dashed #d8b4fe}
 .cell-drop-target{background:#eff6ff!important}
+.cr-item{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;font-size:12px;border-radius:6px;margin-bottom:3px}
+.cr-err{background:#fee2e2;color:#991b1b}.cr-warn{background:#fef9c3;color:#854d0e}.cr-info{background:#eff6ff;color:#1e40af}
+.dag-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;background:#f9f9f7;border-radius:6px;padding:4px 8px}
 </style>
 </head>
 <body>
@@ -188,8 +172,7 @@ label:first-child{margin-top:0}
       </div>
     </div>
     <div class="card">
-      <div class="section-title">Toestellen per groepstype</div>
-      <p style="font-size:11px;color:#888;margin-bottom:10px">Klik op een knop om te wisselen: <b style="color:#1e40af">blauw</b> = verplicht (waarschuwing als ontbreekt) · <b style="color:#92400e">geel</b> = optioneel (solver mag inplannen) · grijs = niet gebruiken.</p>
+      <div class="section-title">Verplichte toestellen per groepstype</div>
       <div id="verplichtForm"></div>
     </div>
   </div>
@@ -214,11 +197,8 @@ label:first-child{margin-top:0}
   <div style="overflow-x:auto;border:1px solid #e0e0d8;border-radius:10px;background:#fff">
     <table class="timetable" id="roosterTable"></table>
   </div>
-  <div id="vrijPanel" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-    <span style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Vrij nu:</span>
-    <span id="vrijSlots" style="font-size:12px;color:#888">—</span>
-  </div>
-  <div id="legendPanel" style="padding:.5rem 0"></div>
+  <div id="vrijPanel" style="margin-top:10px"></div>
+  <div class="card" style="margin-top:10px;padding:.75rem 1.25rem"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span>📡</span><span style="font-size:12px;font-weight:600;color:#444">Conflict-radar</span></div><div id="conflictPanel"><span style="color:#bbb;font-size:12px">Nog geen rooster geladen.</span></div></div>
   <div class="card" style="margin-top:10px;padding:.75rem 1.25rem">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span>📡</span><span style="font-size:12px;font-weight:600;color:#444">Conflict-radar</span>
@@ -264,13 +244,6 @@ const DAGEN=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zo
 // All toestellen — split brug/rek and sprong/trampo
 const TOESTELLEN=['Vloer','Brug','Rek','Balk','Sprong','Trampoline','Tumbling (TU)','Herenbrug','Ringen','Paard met bogen'];
 const SHORT={'Vloer':'Vloer','Brug':'Brug','Rek':'Rek','Balk':'Balk','Sprong':'Sprong','Trampoline':'Trampo','Tumbling (TU)':'TU','Herenbrug':'H.brug','Ringen':'Ringen','Paard met bogen':'Paard'};
-function displayTs(ts){
-  if(!ts) return '—';
-  if(ts.startsWith('COMBO:')){
-    return ts.slice(6).split('+').map(t=>SHORT[t]||t).join('+');
-  }
-  return SHORT[ts]||ts;
-}
 
 // Group types: comp-meisjes, comp-jongens, comp-tumbling, recrea-meisjes, recrea-jongens, recrea-tumbling
 const GROEP_TYPES = [
@@ -295,15 +268,6 @@ const DEFAULT_VERPLICHT = {
   'recrea-jongens': ['Vloer','Rek','Herenbrug','Sprong'],
   'recrea-tumbling':['Tumbling (TU)','Trampoline'],
 };
-// Optioneel: solver mag inplannen als er ruimte is, geen waarschuwing als het ontbreekt
-const DEFAULT_OPTIONEEL = {
-  'comp-meisjes':   ['Tumbling (TU)','Trampoline'],
-  'comp-jongens':   ['Ringen','Paard met bogen','Trampoline','Tumbling (TU)'],
-  'comp-tumbling':  ['Balk','Sprong'],
-  'recrea-meisjes': ['Sprong','Trampoline','Tumbling (TU)'],
-  'recrea-jongens': ['Paard met bogen','Ringen','Trampoline','Tumbling (TU)'],
-  'recrea-tumbling':['Vloer','Sprong'],
-};
 
 // Combineerbare toestellen (kunnen tegelijk als beide vrij zijn)
 const DEFAULT_COMBOS = [
@@ -316,7 +280,6 @@ let state = {
   regels: {
     capaciteit: {'Vloer':40,'Brug':12,'Rek':12,'Balk':15,'Sprong':10,'Trampoline':10,'Tumbling (TU)':20,'Herenbrug':8,'Ringen':6,'Paard met bogen':6},
     verplicht: JSON.parse(JSON.stringify(DEFAULT_VERPLICHT)),
-    optioneel: JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL)),
     combos: JSON.parse(JSON.stringify(DEFAULT_COMBOS)),
     maxBlokComp: 60,
     maxBlokRecrea: 30,
@@ -392,27 +355,6 @@ function loadSchema(s){
   state.rooster={};state.nextId=state.groepen.length+1;
   renderSchemas();renderStartStats();showTab('groepen');
 }
-
-// ── Drag-to-fill (Excel-style) ──
-let _dragSrc={dag:null,gid:null,time:null,toestel:null,isOpw:false,isCool:false};
-function dragStart(e,dag,gid,time){
-  const a=getA(dag,gid,time);
-  if(!a){e.preventDefault();return;}
-  _dragSrc={dag,gid,time,toestel:a.toestel,isOpw:!!a.isOpwarming,isCool:!!a.isCooldown};
-  e.dataTransfer.effectAllowed='copy';
-}
-function dragDrop(e,dag,gid,time){
-  e.preventDefault();
-  if(!_dragSrc.toestel) return;
-  // Only fill same group, same day
-  if(_dragSrc.dag!==dag||_dragSrc.gid!==gid) return;
-  // Don't overwrite opwarming/cooldown with drag
-  const existing=getA(dag,gid,time);
-  if(existing&&(existing.isOpwarming||existing.isCooldown)) return;
-  setA(dag,gid,time,_dragSrc.toestel,_dragSrc.isOpw);
-  renderRooster();
-}
-
 function renderSchemas(){
   document.getElementById('schemaKaarten').innerHTML=SCHEMAS.map(s=>`<div class="schema-card" onclick="loadSchema(SCHEMAS.find(x=>x.id==='${s.id}'))"><div style="font-weight:500;font-size:13px;margin-bottom:3px">${s.titel}</div><div style="font-size:12px;color:#888">${s.beschrijving}</div></div>`).join('');
 }
@@ -461,11 +403,7 @@ function groepRow(g,ti){
   ti=ti||typeInfo(g.groepType);
   const dagTags=g.dagen.map(d=>`<span class="tag">${d.slice(0,2)}</span>`).join('');
   const prioSpan=isComp(g.groepType)?`<span class="prio-badge">${g.prioriteit}</span>`:'<span style="width:22px"></span>';
-  return `<div class="row">${prioSpan}<span style="flex:1;font-weight:500;font-size:13px;min-width:120px">${esc(g.naam)}</span><span class="badge ${ti.badge}" style="font-size:10px">${ti.label}</span><span style="font-size:11px;color:#888;min-width:55px">${g.gymnasten} gymn.</span><span style="font-size:11px;color:#888;min-width:90px">${
-  g.dagTijden&&Object.keys(g.dagTijden).length
-    ?g.dagen.map(d=>{const t=getGroepTijd(g,d);return d.slice(0,2)+': '+t.start+'–'+t.eind;}).join(' · ')
-    :g.start+'–'+g.eind
-}</span><span>${dagTags}</span>${g.trainer?`<span style="font-size:10px;color:#888;background:#f5f5f0;padding:1px 6px;border-radius:4px">👤 ${esc(g.trainer)}</span>`:''}<button class="btn btn-sm" onclick="openGroepModal(${g.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="delGroep(${g.id})">🗑</button></div>`;
+  return `<div class="row">${prioSpan}<span style="flex:1;font-weight:500;font-size:13px;min-width:120px">${esc(g.naam)}</span><span class="badge ${ti.badge}" style="font-size:10px">${ti.label}</span><span style="font-size:11px;color:#888;min-width:55px">${g.gymnasten} gymn.</span><span style="font-size:11px;color:#888">${g.dagTijden&&Object.keys(g.dagTijden).length?g.dagen.map(d=>{const t=getGroepTijd(g,d);return d.slice(0,2)+": "+t.start+"-"+t.eind;}).join(" · "):(g.start+"–"+g.eind)}</span><span>${dagTags}</span><button class="btn btn-sm" onclick="openGroepModal(${g.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="delGroep(${g.id})">🗑</button></div>`;
 }
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
@@ -480,72 +418,66 @@ function delGroep(id){
 
 function openGroepModal(id){
   const g=id?state.groepen.find(x=>x.id===id):null;
-  const typeOpts=GROEP_TYPES.map(t=>`<option value="${t.id}" ${g&&g.groepType===t.id?'selected':''}>${t.label}</option>`).join('');
-  const dagTijden=g?.dagTijden||{};
-  const defaultStart=g?.start||'17:00', defaultEind=g?.eind||'19:00';
+  const typeOpts=GROEP_TYPES.map(t=>`<option value="${t.id}" ${g&&g.groepType===t.id?"selected":""}>${t.label}</option>`).join("");
+  const defaultStart=g&&g.start||"17:00",defaultEind=g&&g.eind||"19:00";
+  const dagTijden=g&&g.dagTijden||{};
   const dagRows=DAGEN.map(d=>{
-    const checked=g&&g.dagen.includes(d)?'checked':'';
-    const ds=(dagTijden[d]?.start)||defaultStart;
-    const de=(dagTijden[d]?.eind)||defaultEind;
-    return `<div class="dag-row" id="dagrow-${d}" style="display:${checked?'flex':'none'};align-items:center;gap:6px;margin-bottom:4px;background:#f9f9f7;border-radius:6px;padding:4px 8px">
-      <span style="font-size:12px;font-weight:500;min-width:28px">${d.slice(0,2)}</span>
-      <input type="time" id="ms-${d}" value="${ds}" style="width:90px;padding:3px 6px;font-size:12px">
-      <span style="font-size:11px;color:#888">→</span>
-      <input type="time" id="me-${d}" value="${de}" style="width:90px;padding:3px 6px;font-size:12px">
-    </div>`;
-  }).join('');
-  const dchecks=DAGEN.map(d=>`<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-size:12px;cursor:pointer">
-    <input type="checkbox" name="dag" value="${d}" ${g&&g.dagen.includes(d)?'checked':''} onchange="toggleDagRow('${d}',this.checked)"> ${d.slice(0,2)}</label>`).join('');
-  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:560px">
-    <div class="modal-title">${g?'Groep bewerken':'Nieuwe groep'}</div>
-    <label>Naam</label><input id="mN" value="${g?esc(g.naam):''}" placeholder="bv. Gymtopia 2A">
+    const checked=g&&g.dagen.includes(d)?"checked":"";
+    const ds=(dagTijden[d]&&dagTijden[d].start)||defaultStart;
+    const de=(dagTijden[d]&&dagTijden[d].eind)||defaultEind;
+    return `<div class="dag-row" id="dagrow-${d}" style="display:${checked?"flex":"none"};align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:12px;font-weight:500;min-width:30px">${d.slice(0,2)}</span><input type="time" id="ms-${d}" value="${ds}" style="width:90px;padding:3px 6px;font-size:12px"><span style="font-size:11px;color:#888">to</span><input type="time" id="me-${d}" value="${de}" style="width:90px;padding:3px 6px;font-size:12px"></div>`;
+  }).join("");
+  const dchecks=DAGEN.map(d=>`<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-size:12px;cursor:pointer"><input type="checkbox" name="dag" value="${d}" ${g&&g.dagen.includes(d)?"checked":""} onchange="toggleDagRow('${d}',this.checked)"> ${d.slice(0,2)}</label>`).join("");
+  document.getElementById("modalContainer").innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:560px">
+    <div class="modal-title">${g?"Groep bewerken":"Nieuwe groep"}</div>
+    <div class="form-row"><div><label>Naam</label><input id="mN" value="${g?esc(g.naam):""}" placeholder="bv. Gymtopia 2A"></div>
+    <div><label>Zaal/locatie</label><input id="mZaal" value="${g?esc(g.zaal||""):""}" placeholder="bv. Zaal A"></div></div>
     <div class="form-row"><div><label>Groepstype</label><select id="mT">${typeOpts}</select></div>
-    <div><label>Prioriteit <span style="font-size:10px;color:#aaa">(recrea = 0)</span></label><input id="mP" type="number" min="0" value="${g&&g.prioriteit!=null?g.prioriteit:isComp(g?.groepType)?state.groepen.filter(x=>isComp(x.groepType)).length+1:0}"></div></div>
-    <div class="form-row">
-      <div><label>Aantal gymnasten</label><input id="mG" type="number" min="1" value="${g?g.gymnasten:10}"></div>
-      <div><label>Trainer(s)</label><input id="mTr" value="${g?esc(g.trainer||''):''}" placeholder="bv. Sarah, Tom"></div>
-    </div>
-    <div class="form-row" style="margin-top:10px">
-      <div><label>Standaard start</label><input id="mS" type="time" value="${defaultStart}"></div>
-      <div><label>Standaard einde</label><input id="mE" type="time" value="${defaultEind}"></div>
-    </div>
-    <p style="font-size:11px;color:#888;margin-top:3px">Vul per dag een afwijkende tijd in als die verschilt van de standaard.</p>
+    <div><label>Prioriteit</label><input id="mP" type="number" min="0" value="${g&&g.prioriteit!=null?g.prioriteit:0}"></div></div>
+    <div class="form-row"><div><label>Trainer(s)</label><input id="mTr" value="${g?esc(g.trainer||""):""}" placeholder="bv. Sarah, Tom"></div>
+    <div><label>Gecombineerd met</label><input id="mComb" value="${g?esc(g.gecombineerdMet||""):""}" placeholder="bv. B12, B11"></div></div>
+    <div class="form-row"><div><label>Standaard start</label><input id="mS" type="time" value="${defaultStart}"></div>
+    <div><label>Standaard einde</label><input id="mE" type="time" value="${defaultEind}"></div></div>
     <label style="margin-top:8px">Trainingsdagen & tijden</label>
-    <div style="margin:6px 0 4px">${dchecks}</div>
-    <div id="dagTimeRows" style="margin-top:4px">${dagRows}</div>
-    <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end"><button class="btn" onclick="closeModal()">Annuleer</button><button class="btn btn-primary" onclick="saveGroep(${g?g.id:'null'})">${g?'Opslaan':'Toevoegen'}</button></div>
+    <div style="margin:5px 0 4px">${dchecks}</div>
+    <div>${dagRows}</div>
+    <label>Aantal gymnasten</label><input id="mG" type="number" min="1" value="${g?g.gymnasten:10}" style="width:120px">
+    <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Annuleer</button>
+      <button class="btn btn-primary" onclick="saveGroep(${g?g.id:"null"})">${g?"Opslaan":"Toevoegen"}</button>
+    </div>
   </div></div>`;
-  tp();
 }
 
-function tp(){} // prioriteit
 
-function toggleDagRow(dag, checked){
-  const row=document.getElementById('dagrow-'+dag);
-  if(row) row.style.display=checked?'flex':'none';
-}
+function tp(){const t=document.getElementById('mT');const p=document.getElementById('mPB');if(t&&p)p.style.display=isComp(t.value)?'':'none';}
 function closeModal(){document.getElementById('modalContainer').innerHTML='';}
 
 function saveGroep(id){
-  const naam=document.getElementById('mN').value.trim();
-  const groepType=document.getElementById('mT').value;
-  const gymn=parseInt(document.getElementById('mG').value)||10;
-  const start=document.getElementById('mS').value,eind=document.getElementById('mE').value;
-  const dagen=[...document.querySelectorAll('input[name="dag"]:checked')].map(x=>x.value);
-  if(!naam){alert('Naam is verplicht.');return;}if(!dagen.length){alert('Selecteer minstens één dag.');return;}
-  const trainer=document.getElementById('mTr')?.value.trim()||'';
-  const prio=parseInt(document.getElementById('mP').value)||0;
-  // Collect per-dag tijden
+  const naam=document.getElementById("mN").value.trim();
+  const groepType=document.getElementById("mT").value;
+  const gymn=parseInt(document.getElementById("mG").value)||10;
+  const start=document.getElementById("mS")&&document.getElementById("mS").value||"17:00";
+  const eind=document.getElementById("mE")&&document.getElementById("mE").value||"19:00";
+  const dagen=[...document.querySelectorAll("input[name=\"dag\"]:checked")].map(x=>x.value);
+  if(!naam){alert("Naam is verplicht.");return;}
+  if(!dagen.length){alert("Selecteer minstens een dag.");return;}
+  const trainer=document.getElementById("mTr")&&document.getElementById("mTr").value.trim()||"";
+  const zaal=document.getElementById("mZaal")&&document.getElementById("mZaal").value.trim()||"";
+  const gecombineerdMet=document.getElementById("mComb")&&document.getElementById("mComb").value.trim()||"";
+  const prio=parseInt(document.getElementById("mP").value)||0;
   const dagTijden={};
   dagen.forEach(d=>{
-    const ds=document.getElementById('ms-'+d)?.value||start;
-    const de=document.getElementById('me-'+d)?.value||eind;
+    const ds=document.getElementById("ms-"+d)&&document.getElementById("ms-"+d).value||start;
+    const de=document.getElementById("me-"+d)&&document.getElementById("me-"+d).value||eind;
     if(ds!==start||de!==eind) dagTijden[d]={start:ds,eind:de};
   });
-  if(id){const g=state.groepen.find(x=>x.id===id);Object.assign(g,{naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,dagen,start,eind,dagTijden});}
-  else state.groepen.push({id:state.nextId++,naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,dagen,start,eind,dagTijden});
+  const obj={naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,zaal,gecombineerdMet,dagen,start,eind,dagTijden};
+  if(id){Object.assign(state.groepen.find(x=>x.id===id),obj);}
+  else state.groepen.push({id:state.nextId++,...obj});
   closeModal();renderGroepen();
 }
+
 
 // ── REGELS ──
 function renderRegels(){
@@ -554,27 +486,19 @@ function renderRegels(){
 
   // Max blok
   document.getElementById('maxBlokUI').innerHTML=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0ee"><div class="section-title">Max. blokduur per toestel</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">Competitie (slots: 15 min)</span><select onchange="state.regels.maxBlokComp=parseInt(this.value)" style="width:140px"><option value="45" ${state.regels.maxBlokComp===45?'selected':''}>Max 45 min</option><option value="60" ${state.regels.maxBlokComp===60?'selected':''}>Max 1 uur</option><option value="90" ${state.regels.maxBlokComp===90?'selected':''}>Max 1,5 uur</option></select></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">Recreatie (slots: 30 min)</span><select onchange="state.regels.maxBlokRecrea=parseInt(this.value)" style="width:140px"><option value="30" ${state.regels.maxBlokRecrea===30?'selected':''}>Max 30 min (2 slots)</option><option value="60" ${state.regels.maxBlokRecrea===60?'selected':''}>Max 1 uur (4 slots)</option></select></div>
-    <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:12px">Cooldown comp (laatste slot)</span><select onchange="state.regels.cooldownComp=this.value==='1'" style="width:140px"><option value="1" ${state.regels.cooldownComp!==false?'selected':''}>Ja, 15 min cooldown</option><option value="0" ${state.regels.cooldownComp===false?'selected':''}>Nee</option></select></div></div>`;
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">Competitie</span><select onchange="state.regels.maxBlokComp=parseInt(this.value)" style="width:120px"><option value="2" ${state.regels.maxBlokComp===2?'selected':''}>Max 1 uur</option><option value="3" ${state.regels.maxBlokComp===3?'selected':''}>Max 1,5 uur</option><option value="4" ${state.regels.maxBlokComp===4?'selected':''}>Max 2 uur</option></select></div>
+    <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:12px">Recreatie</span><select onchange="state.regels.maxBlokRecrea=parseInt(this.value)" style="width:120px"><option value="1" ${state.regels.maxBlokRecrea===1?'selected':''}>Max 30 min</option><option value="2" ${state.regels.maxBlokRecrea===2?'selected':''}>Max 1 uur</option></select></div></div>`;
 
   // Combos
   document.getElementById('combosForm').innerHTML=(state.regels.combos||[]).map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span class="combo-badge">⟷</span><span style="font-size:12px;flex:1">${c.label}</span><button class="btn btn-sm btn-danger" onclick="removeCombo(${i})">🗑</button></div>`).join('')+`<button class="btn btn-sm" onclick="addCombo()" style="margin-top:4px">+ Combinatie toevoegen</button>`;
 
-  // Verplicht / optioneel / niet per type — 3-state
-  let vhtml='<div style="display:grid;gap:2px;font-size:11px;margin-bottom:8px"><div style="display:flex;gap:4px;align-items:center"><span style="display:inline-block;width:10px;height:10px;background:#1e40af;border-radius:2px"></span> Verplicht &nbsp;<span style="display:inline-block;width:10px;height:10px;background:#d97706;border-radius:2px"></span> Optioneel &nbsp;<span style="display:inline-block;width:10px;height:10px;background:#e5e7eb;border-radius:2px"></span> Niet</div></div>';
+  // Verplicht per type
+  let vhtml='';
   GROEP_TYPES.forEach(t=>{
     const v=state.regels.verplicht[t.id]||[];
-    const o=state.regels.optioneel[t.id]||[];
-    vhtml+=`<div style="margin-bottom:14px"><p style="font-size:11px;font-weight:600;color:#444;margin-bottom:6px">${t.label}</p><div style="display:flex;flex-wrap:wrap;gap:6px">`;
-    vhtml+=TOESTELLEN.map(ts=>{
-      const isV=v.includes(ts), isO=o.includes(ts);
-      const state3=isV?'v':isO?'o':'n';
-      const colors={'v':'background:#dbeafe;color:#1e40af;border-color:#93c5fd','o':'background:#fef3c7;color:#92400e;border-color:#fcd34d','n':'background:#f5f5f0;color:#888;border-color:#e5e7eb'};
-      const labels={'v':'verplicht','o':'optioneel','n':'niet'};
-      return `<button onclick="cycleV('${t.id}','${ts}')" title="${labels[state3]}" style="padding:3px 10px;border-radius:6px;border:1px solid;font-size:11px;cursor:pointer;${colors[state3]}">${SHORT[ts]}</button>`;
-    }).join('');
-    vhtml+='</div></div>';
+    vhtml+=`<div style="margin-bottom:12px"><p style="font-size:11px;font-weight:600;color:#444;margin-bottom:4px">${t.label}</p>`;
+    vhtml+=TOESTELLEN.map(ts=>`<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-size:12px;color:#1a1a1a;cursor:pointer"><input type="checkbox" ${v.includes(ts)?'checked':''} onchange="toggleV('${t.id}','${ts}',this.checked)"> ${SHORT[ts]}</label>`).join('');
+    vhtml+='</div>';
   });
   document.getElementById('verplichtForm').innerHTML=vhtml;
 
@@ -585,46 +509,18 @@ function renderRegels(){
   prio.innerHTML=comp.map((g,i)=>`<div class="row" draggable="true" style="cursor:grab" ondragstart="dragPrio(event,${g.id})" ondragover="event.preventDefault()" ondrop="dropPrio(event,${g.id})" ondragleave="this.style.background=''" ondragenter="this.style.background='#eff6ff'"><span style="color:#bbb">⠿</span><span class="prio-badge">${i+1}</span><span class="badge ${typeInfo(g.groepType).badge}" style="font-size:10px">${typeInfo(g.groepType).label}</span><span style="flex:1;font-size:13px">${esc(g.naam)}</span><span style="font-size:11px;color:#888">${g.gymnasten} gymn.</span></div>`).join('');
 }
 
-function cycleV(type,ts){
-  if(!state.regels.verplicht[type]) state.regels.verplicht[type]=[];
-  if(!state.regels.optioneel[type]) state.regels.optioneel[type]=[];
-  const isV=state.regels.verplicht[type].includes(ts);
-  const isO=state.regels.optioneel[type].includes(ts);
-  // cycle: verplicht → optioneel → niet → verplicht
-  if(isV){
-    state.regels.verplicht[type]=state.regels.verplicht[type].filter(x=>x!==ts);
-    state.regels.optioneel[type].push(ts);
-  } else if(isO){
-    state.regels.optioneel[type]=state.regels.optioneel[type].filter(x=>x!==ts);
-    // now "niet"
-  } else {
-    state.regels.verplicht[type].push(ts);
-  }
-  renderRegels();
+function toggleV(type,ts,checked){
+  if(!state.regels.verplicht[type])state.regels.verplicht[type]=[];
+  if(checked&&!state.regels.verplicht[type].includes(ts))state.regels.verplicht[type].push(ts);
+  else state.regels.verplicht[type]=state.regels.verplicht[type].filter(x=>x!==ts);
 }
 
 function addCombo(){
-  const opts=TOESTELLEN.map(t=>`<option value="${t}">${t}</option>`).join('');
-  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:320px">
-    <div class="modal-title">Combinatie toevoegen</div>
-    <label>Toestel A</label><select id="cA">${opts}</select>
-    <label style="margin-top:8px">Toestel B</label><select id="cB">${opts}</select>
-    <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end">
-      <button class="btn" onclick="closeModal()">Annuleer</button>
-      <button class="btn btn-primary" onclick="saveCombo()">Toevoegen</button>
-    </div>
-  </div></div>`;
-  // Pre-select sensible defaults
-  document.getElementById('cA').value='Brug';
-  document.getElementById('cB').value='Rek';
-}
-function saveCombo(){
-  const a=document.getElementById('cA').value;
-  const b=document.getElementById('cB').value;
-  if(a===b){alert('Kies twee verschillende toestellen.');return;}
+  const a=prompt('Eerste toestel:',TOESTELLEN[0]);if(!a||!TOESTELLEN.includes(a)){alert('Ongeldig toestel.');return;}
+  const b=prompt('Tweede toestel:',TOESTELLEN[1]);if(!b||!TOESTELLEN.includes(b)){alert('Ongeldig toestel.');return;}
   if(!state.regels.combos)state.regels.combos=[];
-  state.regels.combos.push({a,b,label:`${a}+${b}`});
-  closeModal();renderRegels();
+  state.regels.combos.push({a,b,label:`${a} + ${b}`});
+  renderRegels();
 }
 function removeCombo(i){state.regels.combos.splice(i,1);renderRegels();}
 
@@ -633,73 +529,28 @@ function dragPrio(e,id){dragId=id;}
 function dropPrio(e,tid){e.currentTarget.style.background='';if(dragId===tid)return;const comp=state.groepen.filter(g=>isComp(g.groepType)).sort((a,b)=>a.prioriteit-b.prioriteit);const fi=comp.findIndex(g=>g.id===dragId),ti=comp.findIndex(g=>g.id===tid);comp.splice(ti,0,comp.splice(fi,1)[0]);comp.forEach((g,i)=>g.prioriteit=i+1);renderRegels();}
 
 // ── ROOSTER helpers ──
-function slotStep(g){ return 15; } // always 15min grid
-function slotStepDag(dag){
-  return 15; // always 15min grid
-}
 function genTimes(dag){
   const gs=state.groepen.filter(g=>g.dagen.includes(dag));if(!gs.length)return[];
   const times=new Set();
-  gs.forEach(g=>{
-    const{start,eind}=getGroepTijd(g,dag);
-    let[hh,mm]=start.split(':').map(Number);
-    const[eh,em]=eind.split(':').map(Number);
-    while(hh*60+mm<=eh*60+em){
-      times.add(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
-      mm+=15;if(mm>=60){hh++;mm-=60;}
-    }
-  });
+  gs.forEach(g=>{const{start,eind}=getGroepTijd(g,dag);let[hh,mm]=start.split(':').map(Number);const[eh,em]=eind.split(':').map(Number);while(hh*60+mm<=eh*60+em){times.add(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);mm+=15;if(mm>=60){hh++;mm-=60;}}});
   return[...times].sort();
 }
-function isActiveAtTime(g,t,dag){
-  return isActief(g,t,dag);
-}
-function getGroepTijd(g,dag){
-  return (g.dagTijden&&g.dagTijden[dag])||{start:g.start,eind:g.eind};
-}
-function isActief(g,t,dag){
-  const{start,eind}=dag?getGroepTijd(g,dag):{start:g.start,eind:g.eind};
-  const s=tM(start),e=tM(eind),tm=tM(t);return tm>=s&&tm<e;
-}
+function isActief(g,t){const s=tM(g.start),e=tM(g.eind),tm=tM(t);return tm>=s&&tm<e;}
 function tM(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function getGroepTijd(g,dag){return(g.dagTijden&&g.dagTijden[dag])||{start:g.start,eind:g.eind};}
+function isActief(g,t,dag){const{start,eind}=dag?getGroepTijd(g,dag):{start:g.start,eind:g.eind};const s=tM(start),e=tM(eind),tm=tM(t);return tm>=s&&tm<e;}
+function isActiveAtTime(g,t,dag){return isActief(g,t,dag);}
 function getA(d,gid,t){return(state.rooster[d]||[]).find(r=>r.groepId===gid&&r.time===t);}
-function setA(d,gid,t,ts,isOpw){
-  if(!state.rooster[d])state.rooster[d]=[];
-  state.rooster[d]=state.rooster[d].filter(r=>!(r.groepId===gid&&r.time===t));
-  if(ts)state.rooster[d].push({groepId:gid,time:t,toestel:ts,isOpwarming:!!isOpw});
-  setTimeout(renderConflictPanel,50);
-}
-function setAModal(d,gid,t,wasOpw){
-  const ts=document.getElementById('cT').value;
-  const isOpw=document.getElementById('cOpw')?.checked||false;
-  const isCool=document.getElementById('cCool')?.checked||false;
-  if(!state.rooster[d])state.rooster[d]=[];
-  state.rooster[d]=state.rooster[d].filter(r=>!(r.groepId===gid&&r.time===t));
-  if(ts)state.rooster[d].push({groepId:gid,time:t,toestel:ts,isOpwarming:isOpw,isCooldown:isCool});
-  setTimeout(renderConflictPanel,50);
-}
+function setA(d,gid,t,ts,isOpw,isCool){if(!state.rooster[d])state.rooster[d]=[];state.rooster[d]=state.rooster[d].filter(r=>!(r.groepId===gid&&r.time===t));if(ts)state.rooster[d].push({groepId:gid,time:t,toestel:ts,isOpwarming:!!isOpw,isCooldown:!!isCool});setTimeout(renderConflictPanel,50);}
+
 function totOp(d,t,ts){return(state.rooster[d]||[]).filter(r=>r.time===t&&r.toestel===ts).reduce((s,r)=>{const g=state.groepen.find(x=>x.id===r.groepId);return s+(g?g.gymnasten:0);},0);}
 function getVerplicht(g){return state.regels.verplicht[g.groepType]||[];}
 
 // ── ROOSTER render ──
 
-const TS_CLASS = {
-  'Vloer':'ts-vloer','Brug':'ts-brug','Rek':'ts-rek','Balk':'ts-balk',
-  'Sprong':'ts-sprong','Trampoline':'ts-trampo','Tumbling (TU)':'ts-tu',
-  'Herenbrug':'ts-hbrug','Ringen':'ts-ringen','Paard met bogen':'ts-paard'
-};
-function tsClass(ts, dag, time, gymn, isOpw, isCool){
-  if(isOpw) return 'slot slot-opw';
-  if(isCool) return 'slot slot-cool';
-  if(!ts) return 'slot';
-  const base = ts.startsWith('COMBO:') ? TS_CLASS[ts.slice(6).split('+')[0]] : (TS_CLASS[ts]||'ts-tu');
-  const tot = totOp(dag,time,ts);
-  const max = state.regels.capaciteit[ts]||99;
-  const isShared = tot > (gymn||0); // others are also on this toestel
-  const isErr = tot > max;
-  return 'slot ' + base + (isShared?' shared':'') + (isErr?' ts-cap-err':'');
-}
-
+const TS_CLASS={'Vloer':'ts-vloer','Brug':'ts-brug','Rek':'ts-rek','Balk':'ts-balk','Sprong':'ts-sprong','Trampoline':'ts-trampo','Tumbling (TU)':'ts-tu','Herenbrug':'ts-hbrug','Ringen':'ts-ringen','Paard met bogen':'ts-paard'};
+function displayTs(ts){if(!ts)return'—';if(ts.startsWith('COMBO:'))return ts.slice(6).split('+').map(t=>SHORT[t]||t).join('+');return SHORT[ts]||ts;}
+function tsClass(ts,dag,t,gymn,isOpw,isCool){if(isOpw)return'slot slot-opw';if(isCool)return'slot slot-cool';if(!ts)return'slot';const base=ts.startsWith('COMBO:')?TS_CLASS[ts.slice(6).split('+')[0]]:(TS_CLASS[ts]||'ts-tu');const tot=totOp(dag,t,ts),max=state.regels.capaciteit[ts]||99;return'slot '+base+(tot>(gymn||0)?' shared':'')+(tot>max?' ts-cap-err':'');}
 function renderRooster(){
   const dag=document.getElementById('dagSelect').value;
   const times=genTimes(dag);
@@ -707,40 +558,26 @@ function renderRooster(){
   const tbl=document.getElementById('roosterTable');
   if(!gs.length){tbl.innerHTML='<tr><td style="padding:1.5rem;color:#888">Geen groepen ingepland op deze dag.</td></tr>';document.getElementById('dagStats').textContent='';return;}
   document.getElementById('dagStats').textContent=`${gs.length} groepen · ${gs.reduce((s,g)=>s+g.gymnasten,0)} gymnasten`;
-  let html='<thead><tr><th class="gh">Tijdslot</th><th class="gh" style="min-width:120px;font-size:10px">Vrij</th>';
+  let html='<thead><tr><th class="gh">Tijdslot</th><th class="gh" style="min-width:110px;font-size:10px">Vrij</th>';
   gs.forEach(g=>{const ti=typeInfo(g.groepType);html+=`<th class="gh"><div>${esc(g.naam)}</div><span class="badge ${ti.badge}" style="font-size:10px">${isComp(g.groepType)?'P'+g.prioriteit:ti.label.split(' ')[0]}</span><div style="font-size:10px;color:#999">${g.start}–${g.eind}</div></th>`;});
   html+='</tr></thead><tbody>';
   times.forEach(t=>{
-    // Check which toestellen have room for the SMALLEST group active at this time
-    // "vrij" means: at least one active group could fit
-    const activeGroups=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
-    const smallestGroup=activeGroups.length?Math.min(...activeGroups.map(g=>g.gymnasten)):1;
-    const vrijNu=TOESTELLEN.filter(ts=>{
-      const tot=totOp(dag,t,ts);
-      const max=state.regels.capaciteit[ts]||99;
-      return tot+smallestGroup<=max; // room for at least the smallest group
-    });
+        const activeG=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
+    const smallestG=activeG.length?Math.min(...activeG.map(g=>g.gymnasten)):1;
+    const vrijNu=TOESTELLEN.filter(ts=>totOp(dag,t,ts)+smallestG<=(state.regels.capaciteit[ts]||99));
     const vrijHtml=vrijNu.map(ts=>`<span class="slot ${TS_CLASS[ts]||''}" style="font-size:9px;padding:1px 4px;margin:1px;display:inline-block">${SHORT[ts]}</span>`).join('');
-    html+=`<tr><td class="tc">${t}</td><td style="padding:2px 4px;vertical-align:middle;border:1px solid #e8e8e4">${vrijHtml}</td>`;
+    html+=`<tr><td class="tc">${t}</td><td style="padding:2px 4px;vertical-align:middle;border:1px solid #e8e8e4;background:#fafaf8">${vrijHtml}</td>`;
     gs.forEach(g=>{
       if(!isActiveAtTime(g,t,dag)){html+='<td class="ti"></td>';return;}
       const a=getA(dag,g.id,t);
-      const ok=a?(totOp(dag,t,a.toestel)<=(state.regels.capaciteit[a.toestel]||999)):true;
-      const ti=typeInfo(g.groepType);
-            const opwLabel=a&&a.isOpwarming?'<span style="font-size:9px;opacity:.6;display:block;line-height:1">opw.</span>':a&&a.isCooldown?'<span style="font-size:9px;opacity:.6;display:block;line-height:1">cool.</span>':'';
+      const opwLabel=a&&a.isOpwarming?'<span style="font-size:9px;opacity:.6;display:block;line-height:1">opw.</span>':a&&a.isCooldown?'<span style="font-size:9px;opacity:.6;display:block;line-height:1">cool.</span>':'';
       const slotCls=a?tsClass(a.toestel,dag,t,g.gymnasten,a.isOpwarming,a.isCooldown):'';
-      html+=`<td class="cl" onclick="openCelModal('${dag}',${g.id},'${t}')"
-        draggable="${a?'true':'false'}"
-        ondragstart="dragStart(event,'${dag}',${g.id},'${t}')"
-        ondragover="event.preventDefault();this.classList.add('cell-drop-target')"
-        ondragleave="this.classList.remove('cell-drop-target')"
-        ondrop="dragDrop(event,'${dag}',${g.id},'${t}');this.classList.remove('cell-drop-target')"><span class="${slotCls}">${a?esc(displayTs(a.toestel)):'<span style="color:#ddd">—</span>'}</span>${a?opwLabel:''}</td>`;
+      html+=`<td class="cl" draggable="${a?'true':'false'}" ondragstart="dragStart(event,'${dag}',${g.id},'${t}')" ondragover="event.preventDefault();this.classList.add('cell-drop-target')" ondragleave="this.classList.remove('cell-drop-target')" ondrop="dragDrop(event,'${dag}',${g.id},'${t}');this.classList.remove('cell-drop-target')" onclick="openCelModal('${dag}',${g.id},'${t}')"><span class="${slotCls}">${a?esc(displayTs(a.toestel)):'<span style="color:#ddd">—</span>'}</span>${a?opwLabel:''}</td>`;
     });
     html+='</tr>';
   });
   tbl.innerHTML=html+'</tbody>';
-  renderVrijToestellen();
-  const legEl=document.getElementById("legendPanel");if(legEl)legEl.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center"><span style="font-size:10px;color:#888">Kleuren:</span>${TOESTELLEN.map(ts=>`<span class="slot ${TS_CLASS[ts]||''}" style="font-size:10px;padding:1px 6px">${SHORT[ts]}</span>`).join('')}<span class="slot ts-brug shared" style="font-size:10px;padding:1px 6px;margin-left:6px">gedeeld</span><span class="slot ts-brug ts-cap-err" style="font-size:10px;padding:1px 6px">te vol</span></div>`;
+  setTimeout(()=>{renderVrijToestellen();renderConflictPanel();},0);
 }
 
 function openCelModal(dag,gid,t){
@@ -749,49 +586,35 @@ function openCelModal(dag,gid,t){
   const verplicht=getVerplicht(g);
   const optioneel=state.regels.optioneel[g.groepType]||[];
   const toegestaan=new Set([...verplicht,...optioneel]);
-
-  // Build option groups: verplicht, optioneel, extra (buiten regels), combos
-  function makeOpt(ts, label){
-    const tot=totOp(dag,t,ts);
-    const max=state.regels.capaciteit[ts]||99;
-    const pct=Math.min(100,Math.round(tot/max*100));
-    const full=tot+g.gymnasten>max;
-    const sel=a&&a.toestel===ts?'selected':'';
-    return `<option value="${ts}" ${sel} ${full?'style="color:#dc2626"':''}>${label||displayTs(ts)} — ${tot}/${max} (${pct}%)${full?' ⛔':''}</option>`;
+  function makeOpt(ts,label){
+    const tot=totOp(dag,t,ts),max=state.regels.capaciteit[ts]||99;
+    const pct=Math.min(100,Math.round(tot/max*100)),full=tot+g.gymnasten>max;
+    return `<option value="${ts}" ${a&&a.toestel===ts?"selected":""} ${full?"style=\"color:#dc2626\"":""}>${label||displayTs(ts)} — ${tot}/${max} (${pct}%)${full?" X":""}</option>`;
   }
-
-  const verplichtOpts=verplicht.map(ts=>makeOpt(ts)).join('');
-  const optionOpts=optioneel.filter(t=>!verplicht.includes(t)).map(ts=>makeOpt(ts)).join('');
-  const extraTs=TOESTELLEN.filter(ts=>!toegestaan.has(ts));
-  const extraOpts=extraTs.map(ts=>makeOpt(ts, displayTs(ts)+' ★')).join('');
-
-  const combosAvail=(state.regels.combos||[]).filter(c=>{
-    const totA=totOp(dag,t,c.a),totB=totOp(dag,t,c.b);
-    return totA+g.gymnasten<=(state.regels.capaciteit[c.a]||99)&&totB+g.gymnasten<=(state.regels.capaciteit[c.b]||99);
-  });
-  const comboOpts=combosAvail.length
-    ?`<optgroup label="── Combis ──">${combosAvail.map(c=>`<option value="COMBO:${c.a}+${c.b}" ${a&&a.toestel===`COMBO:${c.a}+${c.b}`?'selected':''}>${SHORT[c.a]||c.a}+${SHORT[c.b]||c.b}</option>`).join('')}</optgroup>`
-    :'';
-
-  const allOpts=
-    (verplichtOpts?`<optgroup label="── Verplicht ──">${verplichtOpts}</optgroup>`:'')
-    +(optionOpts?`<optgroup label="── Optioneel ──">${optionOpts}</optgroup>`:'')
-    +comboOpts
-    +(extraOpts?`<optgroup label="── Extra (buiten regels) ★ ──">${extraOpts}</optgroup>`:'');
-
-  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:380px">
+  const vOpts=verplicht.map(ts=>makeOpt(ts)).join("");
+  const oOpts=optioneel.filter(t=>!verplicht.includes(t)).map(ts=>makeOpt(ts)).join("");
+  const eOpts=TOESTELLEN.filter(ts=>!toegestaan.has(ts)).map(ts=>makeOpt(ts,displayTs(ts)+" *")).join("");
+  const combosAvail=(state.regels.combos||[]).filter(c=>totOp(dag,t,c.a)+g.gymnasten<=(state.regels.capaciteit[c.a]||99)&&totOp(dag,t,c.b)+g.gymnasten<=(state.regels.capaciteit[c.b]||99));
+  const cOpts=combosAvail.length?"<optgroup label=\"Combis\">"+ combosAvail.map(c=>`<option value="COMBO:${c.a}+${c.b}" ${a&&a.toestel==="COMBO:"+c.a+"+"+c.b?"selected":""}>${(SHORT[c.a]||c.a)+"+"+(SHORT[c.b]||c.b)}</option>`).join("")+"</optgroup>":"";
+  const allOpts=(vOpts?"<optgroup label=\"Verplicht\">"+vOpts+"</optgroup>":"")+(oOpts?"<optgroup label=\"Optioneel\">"+oOpts+"</optgroup>":"")+cOpts+(eOpts?"<optgroup label=\"Extra (buiten regels) *\">"+eOpts+"</optgroup>":"");
+  document.getElementById("modalContainer").innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:380px">
     <div class="modal-title">${esc(g.naam)} — ${dag} ${t}</div>
-    <label>Toestel</label>
-    <select id="cT" size="8" style="height:auto">${allOpts}</select>
-    <p style="font-size:11px;color:#888;margin-top:5px">★ = buiten de ingestelde regels voor deze groep. ⛔ = te vol.</p>
-    <label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer"><input type="checkbox" id="cOpw" ${a&&(a.isOpwarming)?'checked':''}> Opwarming</label>
-    <label style="display:flex;align-items:center;gap:6px;margin-top:4px;cursor:pointer"><input type="checkbox" id="cCool" ${a&&a.isCooldown?'checked':''}> Cooldown</label>
+    <label>Toestel</label><select id="cT" size="8" style="height:auto">${allOpts}</select>
+    <p style="font-size:11px;color:#888;margin-top:5px">* = buiten regels.</p>
+    <label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer"><input type="checkbox" id="cOpw" ${a&&a.isOpwarming?"checked":""}> Opwarming</label>
+    <label style="display:flex;align-items:center;gap:6px;margin-top:4px;cursor:pointer"><input type="checkbox" id="cCool" ${a&&a.isCooldown?"checked":""}> Cooldown</label>
     <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end">
-      ${a?`<button class="btn btn-danger btn-sm" onclick="setA('${dag}',${gid},'${t}',null);closeModal();renderRooster()">🗑 Verwijder</button>`:''}
+      ${a?`<button class="btn btn-danger btn-sm" onclick="setA('${dag}',${gid},'${t}',null);closeModal();renderRooster()">Verwijder</button>`:""}
       <button class="btn" onclick="closeModal()">Annuleer</button>
-      <button class="btn btn-primary" onclick="setAModal('${dag}',${gid},'${t}',${a?a.isOpwarming:false})">Opslaan</button>
+      <button class="btn btn-primary" onclick="saveCelModal('${dag}',${gid},'${t}')">Opslaan</button>
     </div>
   </div></div>`;
+}
+function saveCelModal(dag,gid,t){
+  const ts=document.getElementById("cT").value;
+  const isOpw=document.getElementById("cOpw")&&document.getElementById("cOpw").checked||false;
+  const isCool=document.getElementById("cCool")&&document.getElementById("cCool").checked||false;
+  setA(dag,gid,t,ts,isOpw,isCool);closeModal();renderRooster();
 }
 
 
@@ -800,12 +623,12 @@ function renderValidatie(){
   const probs=[],dek={};
   state.groepen.forEach(g=>{
     dek[g.id]=new Set();
-    g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek[g.id].add(x));}}));
+    g.dagen.forEach(d=>genTimes(d).filter(t=>isActief(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(a){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[ a.toestel];ts.forEach(x=>dek[g.id].add(x));}}));
     getVerplicht(g).forEach(t=>{if(!dek[g.id].has(t))probs.push({e:'warn',txt:`<b>${esc(g.naam)}</b> heeft <b>${t}</b> nog niet gehad.`});});
   });
   DAGEN.forEach(d=>genTimes(d).forEach(t=>TOESTELLEN.forEach(ts=>{const tot=totOp(d,t,ts),max=state.regels.capaciteit[ts]||99;if(tot>max)probs.push({e:'err',txt:`${d} ${t}: <b>${ts}</b> heeft ${tot}/${max} gymn.`});})));
   // Dup: same toestel 2x on same day
-  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>probs.push({e:'warn',txt:`<b>${esc(g.naam)}</b> heeft <b>${ts}</b> 2× op ${d}`}));}));
+  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActief(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>probs.push({e:'warn',txt:`<b>${esc(g.naam)}</b> heeft <b>${ts}</b> 2× op ${d}`}));}));
 
   const ingevuld=Object.values(state.rooster).reduce((s,a)=>s+a.length,0);
   const ec=probs.filter(p=>p.e==='err').length,wc=probs.filter(p=>p.e==='warn').length;
@@ -817,69 +640,12 @@ function renderValidatie(){
 }
 
 // ── CONFLICT RADAR ──
-
-function renderVrijToestellen(){
-  const dag=document.getElementById('dagSelect')?.value;
-  const panel=document.getElementById('vrijSlots');
-  if(!panel||!dag) return;
-  const times=genTimes(dag);
-  if(!times.length){panel.innerHTML='<span style="color:#bbb">geen data</span>';return;}
-
-  // Show vrije toestellen per tijdslot as a small grid
-  // Use the current visible time range
-  const vrij={};
-  TOESTELLEN.forEach(ts=>{
-    vrij[ts]=[];
-    times.forEach(t=>{
-      const tot=totOp(dag,t,ts);
-      const max=state.regels.capaciteit[ts]||99;
-      if(tot===0) vrij[ts].push({t,status:'vrij'});
-      else if(tot<max) vrij[ts].push({t,status:'deels'});
-    });
-  });
-
-  // Show as color-coded badges per toestel
-  const parent=document.getElementById('vrijPanel');
-  if(!parent) return;
-
-  // Replace the vrij panel with a mini overview table
-  parent.innerHTML=`<div style="width:100%;margin-top:2px">
-    <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Toestelbezetting — ${dag}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px">
-    ${TOESTELLEN.map(ts=>{
-      const max=state.regels.capaciteit[ts]||99;
-      // Show slots used across the day
-      const usedSlots=times.filter(t=>totOp(dag,t,ts)>0).length;
-      const overSlots=times.filter(t=>totOp(dag,t,ts)>max).length;
-      const pct=times.length?Math.round(usedSlots/times.length*100):0;
-      const cls=TS_CLASS[ts]||'ts-tu';
-      const borderStyle=overSlots>0?'border:2px solid #dc2626':'border:1px solid #e0e0d8';
-      const maxNow=times.reduce((mx,t)=>Math.max(mx,totOp(dag,t,ts)),0);
-      // For each time: is there room for the group active at that moment?
-      const hasRoomSlots=times.filter(t=>{
-        const activeG=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
-        const smallest=activeG.length?Math.min(...activeG.map(g=>g.gymnasten)):1;
-        return totOp(dag,t,ts)+smallest<=max;
-      }).length;
-      const roomPct=times.length?Math.round(hasRoomSlots/times.length*100):100;
-      return `<div style="padding:5px 10px;border-radius:8px;${borderStyle};min-width:80px;text-align:center" class="${cls}">
-        <div style="font-size:11px;font-weight:600">${SHORT[ts]}</div>
-        <div style="font-size:10px;opacity:.8">piek ${maxNow}/${max} gymn.</div>
-        <div style="height:4px;background:rgba(0,0,0,.1);border-radius:2px;margin-top:3px;overflow:hidden">
-          <div style="height:100%;background:${overSlots>0?'#dc2626':roomPct<30?'#d97706':'currentColor'};opacity:.6;width:${Math.min(100,100-roomPct)}%"></div>
-        </div>
-      </div>`;
-    }).join('')}
-    </div>
-  </div>`;
-}
-
 function renderConflictPanel(){
   const panel=document.getElementById('conflictPanel');if(!panel)return;
   const conflicts=[];
   DAGEN.forEach(d=>genTimes(d).forEach(t=>TOESTELLEN.forEach(ts=>{const tot=totOp(d,t,ts),max=state.regels.capaciteit[ts]||99;if(tot>max)conflicts.push({e:'err',msg:`${d} ${t}: ${ts} heeft ${tot}/${max} gymn.`});})));
-  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>conflicts.push({e:'dup',msg:`${g.naam}: ${ts} 2× op ${d}`}));}));
-  const missCount=state.groepen.filter(g=>{const dek=new Set();g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek.add(x));}}));return getVerplicht(g).some(t=>!dek.has(t));}).length;
+  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActief(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>conflicts.push({e:'dup',msg:`${g.naam}: ${ts} 2× op ${d}`}));}));
+  const missCount=state.groepen.filter(g=>{const dek=new Set();g.dagen.forEach(d=>genTimes(d).filter(t=>isActief(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(a){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek.add(x));}}));return getVerplicht(g).some(t=>!dek.has(t));}).length;
   if(!conflicts.length&&!missCount){panel.innerHTML='<span style="color:#16a34a;font-size:12px">✅ Geen conflicten</span>';return;}
   let html=conflicts.map(c=>`<div class="cr-item ${c.e==='err'?'cr-err':'cr-warn'}">${c.e==='err'?'❌':'⚠️'} ${c.msg}</div>`).join('');
   if(missCount)html+=`<div class="cr-item cr-info">ℹ️ ${missCount} groep(en) missen nog verplichte toestellen — zie Validatie-tab</div>`;
@@ -938,203 +704,94 @@ function showSolverResult(log){
   </div></div>`;
 }
 
-// Opwarming toestellen — tellen NIET mee voor dekking
-const OPWARMING_TOESTELLEN = ['Vloer','Tumbling (TU)','Sprong','Trampoline','Balk','Herenbrug'];
-
 function runSolver(){
   const log=[];
   const newRooster={};
+  const tM2=t=>{const[h,m]=t.split(':').map(Number);return h*60+m;};
+  function groupSlots(g,dag){const s=[];let[h,m]=g.start.split(':').map(Number);const[eh,em]=g.eind.split(':').map(Number);while(h*60+m<eh*60+em){s.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);m+=30;if(m>=60){h++;m-=60;}}return s;}
+  function countOn(dag,time,ts){return(newRooster[dag]||[]).filter(r=>r.time===time&&r.toestel===ts).reduce((s,r)=>{const g=state.groepen.find(x=>x.id===r.groepId);return s+(g?g.gymnasten:0);},0);}
+  function hasCap(dag,time,ts,gymn){return countOn(dag,time,ts)+(gymn)<=(state.regels.capaciteit[ts]||99);}
 
-  function slotsForGroup(g){
-    const step=isComp(g.groepType)?15:30;
-    const s=[];let[hh,mm]=g.start.split(':').map(Number);
-    const[eh,em]=g.eind.split(':').map(Number);
-    while(hh*60+mm<eh*60+em){
-      s.push(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
-      mm+=step;if(mm>=60){hh++;mm-=60;}
-    }
-    return s;
-  }
-
-  function maxBlokSlots(g){
-    const mins=isComp(g.groepType)?(state.regels.maxBlokComp||60):(state.regels.maxBlokRecrea||30);
-    return Math.max(1,Math.round(mins/15)); // always 15min slots
-  }
-
-  // Count gymnasten on toestel at dag+time in newRooster
-  function countOn(dag,time,ts){
-    return(newRooster[dag]||[])
-      .filter(r=>r.time===time&&r.toestel===ts)
-      .reduce((s,r)=>{const g=state.groepen.find(x=>x.id===r.groepId);return s+(g?g.gymnasten:0);},0);
-  }
-  function hasCap(dag,time,ts,gymn){
-    return countOn(dag,time,ts)+gymn<=(state.regels.capaciteit[ts]||99);
-  }
-
-  // Base priority for a toestel given group type
   function toestelPrio(g,ts){
     const gt=g.groepType;
-    if(gt==='comp-tumbling'||gt==='recrea-tumbling'){const p={'Tumbling (TU)':10,'Trampoline':9,'Vloer':7,'Sprong':5};return p[ts]||1;}
-    if(gt==='comp-meisjes'){const p={'Vloer':10,'Brug':9,'Balk':9,'Sprong':6,'Trampoline':5,'Tumbling (TU)':4,'Rek':1,'Herenbrug':1,'Ringen':1,'Paard met bogen':1};return p[ts]||1;}
+    if(gt==='comp-tumbling'||gt==='recrea-tumbling'){const p={'Tumbling (TU)':10,'Trampoline':9,'Vloer':7};return p[ts]||1;}
+    if(gt==='comp-meisjes'){const p={'Vloer':10,'Brug':10,'Balk':9,'Sprong':6,'Trampoline':5,'Tumbling (TU)':4,'Rek':1,'Herenbrug':1,'Ringen':1,'Paard met bogen':1};return p[ts]||1;}
     if(gt==='comp-jongens'||gt==='recrea-jongens'){const p={'Vloer':9,'Rek':9,'Herenbrug':8,'Ringen':7,'Paard met bogen':6,'Sprong':7,'Trampoline':5,'Tumbling (TU)':4,'Brug':3,'Balk':1};return p[ts]||1;}
+    // recrea meisjes
     const p={'Vloer':8,'Brug':7,'Balk':7,'Sprong':5,'Trampoline':4,'Tumbling (TU)':3,'Rek':2,'Herenbrug':2,'Ringen':1,'Paard met bogen':1};return p[ts]||1;
   }
 
-  // How full is a toestel at a given time? Lower = prefer this toestel (spread load)
-  function capacityUsed(dag,time,ts){
-    const used=countOn(dag,time,ts);
-    const max=state.regels.capaciteit[ts]||99;
-    return used/max; // 0 = empty, 1 = full
+  // Try to use a combo if both toestellen are free
+  function bestCombo(g,dag,time){
+    for(const c of (state.regels.combos||[])){
+      if(hasCap(dag,time,c.a,g.gymnasten)&&hasCap(dag,time,c.b,g.gymnasten)){
+        const pA=toestelPrio(g,c.a),pB=toestelPrio(g,c.b);
+        if(pA+pB>=10) return `COMBO:${c.a}+${c.b}`;
+      }
+    }
+    return null;
   }
 
-  // Pick best opwarming toestel
-  function pickOpwarming(g,dag,time){
-    const pref=isTumbling(g.groepType)
-      ?['Tumbling (TU)','Vloer','Trampoline','Sprong','Balk','Herenbrug']
-      :['Vloer','Sprong','Trampoline','Tumbling (TU)','Balk','Herenbrug'];
-    return pref.find(ts=>hasCap(dag,time,ts,g.gymnasten))||null;
-  }
-
-  // Build rotation plan: list of toestellen to use across workSlots
-  // NO combos — always use separate toestellen to maximize spread
-  // Each toestel appears as ONE block of max maxBlok slots
-  // Sort: comp first (by priority), then recrea
-  const sorted=[...state.groepen].sort((a,b)=>{
-    if(isComp(a.groepType)!==isComp(b.groepType))return isComp(a.groepType)?-1:1;
-    return a.prioriteit-b.prioriteit;
-  });
+  const sorted=[...state.groepen].sort((a,b)=>{if(isComp(a.groepType)!==isComp(b.groepType))return isComp(a.groepType)?-1:1;return a.prioriteit-b.prioriteit;});
 
   sorted.forEach(g=>{
     const verplicht=[...getVerplicht(g)];
-    const optioneel=state.regels.optioneel[g.groepType]||[];
-    const toegestaan=[...new Set([...verplicht,...optioneel])];
-    const maxBlok=maxBlokSlots(g);
-    const prefBlok=isComp(g.groepType)?2:2; // preferred 30min blocks for both
-    const nDagen=g.dagen.length;
+    const maxBlok=isComp(g.groepType)?(state.regels.maxBlokComp||2):(state.regels.maxBlokRecrea||1);
+    const isTU=isTumbling(g.groepType);
+    const extraCandidates=TOESTELLEN.filter(t=>!verplicht.includes(t)&&toestelPrio(g,t)>2).sort((a,b)=>toestelPrio(g,b)-toestelPrio(g,a));
+    const trainingDagen=g.dagen;
     const verplichtSorted=[...verplicht].sort((a,b)=>toestelPrio(g,b)-toestelPrio(g,a));
+    const dagPlan={};trainingDagen.forEach(d=>dagPlan[d]=[]);
 
-    g.dagen.forEach((dag,dagIndex)=>{
-      const allSlots=(()=>{
-        const{start,eind}=getGroepTijd(g,dag);
-        const s=[];let[hh,mm]=start.split(':').map(Number);
-        const[eh,em]=eind.split(':').map(Number);
-        while(hh*60+mm<eh*60+em){
-          s.push(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
-          mm+=15;if(mm>=60){hh++;mm-=60;}
-        }
-        return s;
-      })();
-
-      if(!allSlots.length) return;
-      if(!newRooster[dag]) newRooster[dag]=[];
-
-      // ── Opwarming: altijd 2 slots ──
-      const opwTs=pickOpwarming(g,dag,allSlots[0]);
-      const opwTs2=allSlots.length>1?pickOpwarming(g,dag,allSlots[1]):null;
-      newRooster[dag].push({groepId:g.id,time:allSlots[0],toestel:opwTs||'Vloer',isOpwarming:true});
-      if(allSlots.length>1){
-        newRooster[dag].push({groepId:g.id,time:allSlots[1],toestel:opwTs2||opwTs||'Vloer',isOpwarming:true});
-      }
-
-      // ── Cooldown: last slot (comp only) ──
-      const doCooldown=isComp(g.groepType)&&state.regels.cooldownComp!==false&&allSlots.length>4;
-      if(doCooldown){
-        const coolTs=pickOpwarming(g,dag,allSlots[allSlots.length-1])||opwTs||'Vloer';
-        newRooster[dag].push({groepId:g.id,time:allSlots[allSlots.length-1],toestel:coolTs,isCooldown:true});
-      }
-
-      const workSlots=doCooldown?allSlots.slice(2,-1):allSlots.slice(2);
-      if(!workSlots.length) return;
-
-      // ── Determine which verplicht toestellen to cover today ──
-      const doneThisWeek=new Set();
-      g.dagen.filter((_,i)=>i<dagIndex).forEach(d=>{
-        (newRooster[d]||[]).filter(r=>r.groepId===g.id&&!r.isOpwarming&&!r.isCooldown).forEach(r=>{
-          const parts=r.toestel.startsWith('COMBO:')?r.toestel.slice(6).split('+'):[r.toestel];
-          parts.forEach(x=>doneThisWeek.add(x));
-        });
-      });
-
-      let todayVerplicht;
-      if(isComp(g.groepType)){
-        const stillNeeded=verplichtSorted.filter(ts=>!doneThisWeek.has(ts));
-        const daysLeft=nDagen-dagIndex;
-        const isLastDay=dagIndex===nDagen-1;
-        const perDay=Math.max(2,Math.ceil(stillNeeded.length/daysLeft));
-        todayVerplicht=isLastDay?(stillNeeded.length?stillNeeded:verplichtSorted.slice(0,2)):stillNeeded.slice(0,perDay);
-        if(todayVerplicht.length<2){
-          verplichtSorted.forEach(ts=>{if(todayVerplicht.length<2&&!todayVerplicht.includes(ts))todayVerplicht.push(ts);});
-        }
-      } else {
-        const stillNeeded=verplichtSorted.filter(ts=>!doneThisWeek.has(ts));
-        const daysLeft=nDagen-dagIndex;
-        const isLastDay=dagIndex===nDagen-1;
-        todayVerplicht=isLastDay?stillNeeded:stillNeeded.filter((_,i)=>i%daysLeft===0);
-        if(!todayVerplicht.length) todayVerplicht=verplichtSorted.slice(0,1);
-      }
-
-      // Vloer+TU rule: non-TU groups can't have both as separate blocks
-      if(!isTumbling(g.groepType)&&todayVerplicht.includes('Vloer')&&todayVerplicht.includes('Tumbling (TU)')){
-        todayVerplicht=todayVerplicht.filter(t=>t!=='Tumbling (TU)');
-      }
-
-      // ── Slot-by-slot smart assignment ──
-      // Track what this group has used today and consecutive count
-      const usedToday=[]; // list of toestellen assigned so far this workday
-
-      // Score a toestel for a given time slot:
-      // Lower score = better choice
-      function scoreTs(ts, time, consecutiveCount){
-        if(!hasCap(dag,time,ts,g.gymnasten)) return 9999; // full
-        // Already used today and would exceed maxBlok?
-        if(consecutiveCount>=maxBlok) return 9999;
-        // Already used today (not consecutive): avoid repeats
-        const usedCount=usedToday.filter(x=>x===ts).length;
-        if(usedCount>0&&consecutiveCount===0) return 8000+usedCount; // repeat penalty
-
-        // How full is this toestel right now? (0=empty, 1=full)
-        const fillRatio=capacityUsed(dag,time,ts);
-        
-        // Is this toestel needed today?
-        const isNeeded=todayVerplicht.includes(ts)?0:1;
-        const isAllowed=toegestaan.includes(ts)?0:1;
-        if(isAllowed>0) return 9999;
-
-        // Prefer: needed > less used by others > higher group prio
-        return isNeeded*1000 + fillRatio*100 - toestelPrio(g,ts);
-      }
-
-      workSlots.forEach((time)=>{
-        // Consecutive count of last toestel
-        const lastTs=usedToday.length?usedToday[usedToday.length-1]:null;
-        let consec=0;
-        for(let i=usedToday.length-1;i>=0;i--){if(usedToday[i]===lastTs)consec++;else break;}
-
-        // If we're mid-block (consec < prefBlok) and still within maxBlok, continue same toestel
-        if(lastTs&&consec<prefBlok&&consec<maxBlok&&hasCap(dag,time,lastTs,g.gymnasten)){
-          // Stay on current toestel (building the block)
-          newRooster[dag].push({groepId:g.id,time,toestel:lastTs});
-          usedToday.push(lastTs);
-          return;
-        }
-
-        // Otherwise: pick next best toestel
-        // Must switch if we hit maxBlok, should switch if we hit prefBlok
-        const mustSwitch=lastTs&&consec>=maxBlok;
-        const shouldSwitch=lastTs&&consec>=prefBlok;
-
-        const candidates=toegestaan
-          .filter(ts=>!(mustSwitch||shouldSwitch)?true:ts!==lastTs) // avoid same if should switch
-          .map(ts=>({ts,score:scoreTs(ts,time,(ts===lastTs)?consec:0)}))
-          .filter(x=>x.score<9000)
-          .sort((a,b)=>a.score-b.score);
-
-        const chosen=candidates[0]?.ts;
-        if(chosen){
-          newRooster[dag].push({groepId:g.id,time,toestel:chosen});
-          usedToday.push(chosen);
+    // Spread verplicht across days, no repeat per day
+    let dagIdx=0;
+    verplichtSorted.forEach(ts=>{
+      let placed=false;
+      for(let i=0;i<trainingDagen.length;i++){
+        const d=trainingDagen[(dagIdx+i)%trainingDagen.length];
+        if(dagPlan[d].includes(ts))continue;
+        // TU/Trampo must share day with Vloer or Balk
+        if(ts==='Tumbling (TU)'||ts==='Trampoline'){
+          const groundDay=trainingDagen.find(dd=>(dagPlan[dd].includes('Vloer')||dagPlan[dd].includes('Balk'))&&!dagPlan[dd].includes(ts));
+          const target=groundDay||d;
+          if(!dagPlan[target].includes(ts)){dagPlan[target].push(ts);placed=true;dagIdx=(trainingDagen.indexOf(target)+1)%trainingDagen.length;break;}
         } else {
-          log.push({type:'fail',msg:`${g.naam} ${dag} ${time}: geen toestel beschikbaar`});
+          dagPlan[d].push(ts);dagIdx=(dagIdx+i+1)%trainingDagen.length;placed=true;break;
+        }
+      }
+      if(!placed){const d=trainingDagen.reduce((a,b)=>dagPlan[a].length<=dagPlan[b].length?a:b);if(!dagPlan[d].includes(ts))dagPlan[d].push(ts);}
+    });
+
+    // Fill extra
+    trainingDagen.forEach(d=>{
+      const slots=groupSlots(g,d);
+      const spt=Math.max(1,Math.round(slots.length/Math.max(dagPlan[d].length,1)));
+      const more=Math.floor(slots.length/spt)-dagPlan[d].length;
+      if(more>0)extraCandidates.filter(t=>!dagPlan[d].includes(t)).slice(0,more).forEach(t=>dagPlan[d].push(t));
+    });
+
+    // Assign slots as blocks
+    trainingDagen.forEach(dag=>{
+      const slots=groupSlots(g,dag);
+      const plan=dagPlan[dag];if(!plan.length)return;
+      if(!newRooster[dag])newRooster[dag]=[];
+      const blockSize=Math.floor(slots.length/plan.length);
+      const remainder=slots.length%plan.length;
+      let si=0;
+      plan.forEach((ts,pi)=>{
+        const bsize=Math.min(maxBlok,blockSize+(pi<remainder?1:0));
+        for(let i=0;i<bsize;i++){
+          const time=slots[si++];if(!time)continue;
+          // Try combo first
+          const combo=bestCombo(g,dag,time);
+          const chosenTs=combo||ts;
+          if(hasCap(dag,time,chosenTs.startsWith('COMBO:')?chosenTs.slice(6).split('+')[0]:chosenTs,g.gymnasten)){
+            newRooster[dag].push({groepId:g.id,time,toestel:chosenTs});
+          } else {
+            const alt=TOESTELLEN.filter(t=>t!==ts&&hasCap(dag,time,t,g.gymnasten)).sort((a,b)=>toestelPrio(g,b)-toestelPrio(g,a))[0];
+            if(alt){newRooster[dag].push({groepId:g.id,time,toestel:alt});log.push({type:'swap',msg:`${g.naam} ${dag} ${time}: ${ts} vol → ${alt}`});}
+            else log.push({type:'fail',msg:`${g.naam} ${dag} ${time}: geen toestel beschikbaar`});
+          }
         }
       });
     });
@@ -1144,50 +801,71 @@ function runSolver(){
 
 // ── IMPORT / EXPORT ──
 function downloadExcelTemplate(){
-  if(!window.XLSX){alert('XLSX library niet geladen.');return;}
+  if(!window.XLSX){alert("XLSX library niet geladen.");return;}
   const wb=XLSX.utils.book_new();
-  const hdr=['Naam','Groepstype','Prioriteit','Aantal gymnasten','Start','Einde',...DAGEN];
-  const rows=[['Groepen importtemplate — Zaalverdeling Tool'],['Groepstype: comp-meisjes / comp-jongens / comp-tumbling / recrea-meisjes / recrea-jongens / recrea-tumbling'],[''],hdr,...OTV_GROEPEN.map(g=>[g.naam,g.groepType,isComp(g.groepType)?g.prioriteit:'',g.gymnasten,g.start,g.eind,...DAGEN.map(d=>g.dagen.includes(d)?1:'')])];
-  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:26},{wch:18},{wch:12},{wch:16},{wch:8},{wch:8},...DAGEN.map(()=>({wch:10}))];
-  XLSX.utils.book_append_sheet(wb,ws,'Groepen');XLSX.writeFile(wb,'groepen_template.xlsx');
+  const hdr=["Groepsnaam","Zaal","Groepstype","Prioriteit","Trainer(s)","Dag","Start","Einde","Aantal gymnasten","Gecombineerd met","Opmerking"];
+  const bronGroepen=state.groepen.length?state.groepen:OTV_GROEPEN;
+  const dataRows=[];
+  bronGroepen.forEach(g=>{
+    (g.dagen||[]).forEach(dag=>{
+      const td=getGroepTijd(g,dag);
+      dataRows.push([g.naam,g.zaal||"",g.groepType||"recrea-meisjes",g.prioriteit||0,g.trainer||"",dag,td.start,td.eind,g.gymnasten||10,g.gecombineerdMet||"",g.opmerking||""]);
+    });
+  });
+  const rows=[["Groepen importtemplate (1 rij per dag)"],["Groepstype: comp-meisjes/comp-jongens/comp-tumbling/recrea-meisjes/recrea-jongens/recrea-tumbling"],["Gecombineerd met: groepsnaam als ze samen trainen op die dag"],[""],hdr,...dataRows];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"]=[{wch:24},{wch:12},{wch:18},{wch:10},{wch:16},{wch:12},{wch:8},{wch:8},{wch:16},{wch:20},{wch:24}];
+  XLSX.utils.book_append_sheet(wb,ws,"Groepen");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Kolom","Uitleg","Voorbeeld"],["Groepsnaam","Naam van de groep","B-ploeg"],["Zaal","Optioneel: zaal/locatie","Zaal A"],["Groepstype","comp-meisjes / comp-jongens / comp-tumbling / recrea-meisjes / recrea-jongens / recrea-tumbling","comp-meisjes"],["Prioriteit","1=hoogste (comp), 0 voor recrea","1"],["Trainer(s)","Naam(en) trainer(s)","Sarah, Tom"],["Dag","Één dag per rij","Maandag"],["Start","Starttijd HH:MM","17:00"],["Einde","Eindtijd HH:MM","20:00"],["Aantal gymnasten","Aantal op deze dag","10"],["Gecombineerd met","Groepsnaam als ze samen trainen, kommagescheiden","B12, B11"],["Opmerking","Vrij veld","Seizoensrooster"]]),"Uitleg");
+  XLSX.writeFile(wb,"groepen_template.xlsx");
 }
+
 
 function importExcelTemplate(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
-      const wb=XLSX.read(ev.target.result,{type:'binary'});
+      const wb=XLSX.read(ev.target.result,{type:"binary"});
       const ws=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      let hr=-1;for(let i=0;i<rows.length;i++){if(String(rows[i][0]).toLowerCase()==='naam'){hr=i;break;}}
-      if(hr<0){alert('Kan de kolomkoppen niet vinden.');return;}
-      const hds=rows[hr].map(h=>String(h).trim().toLowerCase());
-      const iN=hds.indexOf('naam'),iT=hds.findIndex(h=>h.includes('type')),iP=hds.findIndex(h=>h.includes('prioriteit')),iG=hds.findIndex(h=>h.includes('aantal')),iS=hds.findIndex(h=>h==='start'),iE=hds.findIndex(h=>h==='einde'||h==='eind');
-      const iD=DAGEN.map(d=>hds.findIndex(h=>h===d.toLowerCase()));
-      const nG=[];let id=1;
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+      let hr=-1;
+      for(let i=0;i<rows.length;i++){const f=String(rows[i][0]).toLowerCase().trim();if(f==="groepsnaam"||f==="naam"){hr=i;break;}}
+      if(hr<0){alert("Kan kolomkoppen niet vinden.");return;}
+      const hds=rows[hr].map(x=>String(x).trim().toLowerCase());
+      const col=k=>hds.findIndex(h=>h.includes(k));
+      const iN=col("naam"),iZ=col("zaal"),iT=col("type"),iP=col("prioriteit"),iTr=col("trainer");
+      const iD=col("dag"),iS=col("start"),iE=col("eind"),iG=col("aantal"),iC=col("gecombineerd"),iO=col("opmerking");
+      const map={};
       for(let i=hr+1;i<rows.length;i++){
-        const r=rows[i];const naam=String(r[iN]||'').trim();if(!naam)continue;
-        const gt=GROEP_TYPES.find(x=>x.id===String(r[iT]||'').trim())?String(r[iT]).trim():'recrea-meisjes';
-        const prio=parseInt(r[iP])||0,gymn=parseInt(r[iG])||10;
-        const start=String(r[iS]||'17:00').trim(),eind=String(r[iE]||'19:00').trim();
-        const dagen=DAGEN.filter((_,di)=>iD[di]>=0&&(r[iD[di]]===1||r[iD[di]]==='1'));
-        nG.push({id:id++,naam,groepType:gt,prioriteit:isComp(gt)?prio:0,gymnasten:gymn,dagen:dagen.length?dagen:['Maandag'],start,eind});
+        const r=rows[i];const naam=String(r[iN]||"").trim();if(!naam)continue;
+        if(!map[naam]){
+          const gt=GROEP_TYPES.find(x=>x.id===String(r[iT]||"").trim())&&String(r[iT]).trim()||"recrea-meisjes";
+          map[naam]={naam,zaal:iZ>=0?String(r[iZ]||""):"",groepType:gt,prioriteit:parseInt(r[iP])||0,trainer:iTr>=0?String(r[iTr]||""):"",gymnasten:parseInt(r[iG])||10,gecombineerdMet:iC>=0?String(r[iC]||""):"",opmerking:iO>=0?String(r[iO]||""):"",dagen:[],dagTijden:{},start:"17:00",eind:"19:00",_first:true};
+        }
+        const dag=String(r[iD]||"").trim();if(!DAGEN.includes(dag))continue;
+        const start=String(r[iS]||"17:00").trim()||"17:00";
+        const eind=String(r[iE]||"19:00").trim()||"19:00";
+        if(!map[naam].dagen.includes(dag))map[naam].dagen.push(dag);
+        if(map[naam]._first){map[naam].start=start;map[naam].eind=eind;map[naam]._first=false;}
+        else if(start!==map[naam].start||eind!==map[naam].eind) map[naam].dagTijden[dag]={start,eind};
       }
-      if(!nG.length){alert('Geen geldige rijen gevonden.');return;}
-      if(confirm(`${nG.length} groepen gevonden. Huidige groepen vervangen?`)){
-        state.groepen=nG;state.rooster={};state.nextId=id;
-        document.getElementById('importStatus').innerHTML='<span style="color:#16a34a">✅ Groepen geladen!</span>';
-        showTab('groepen');
+      const nG=Object.values(map).filter(g=>g.dagen.length).map((g,i)=>{delete g._first;return {...g,id:i+1};});
+      if(!nG.length){alert("Geen geldige rijen gevonden.");return;}
+      if(confirm(nG.length+" groepen gevonden. Huidige groepen vervangen?")){
+        state.groepen=nG;state.rooster={};state.nextId=nG.length+1;
+        document.getElementById("importStatus").innerHTML="Groepen geladen!";
+        showTab("groepen");
       }
-    }catch(err){alert('Fout bij inlezen: '+err.message);}
-    e.target.value='';
+    }catch(err){alert("Fout bij inlezen: "+err.message);console.error(err);}
+    e.target.value="";
   };
   reader.readAsBinaryString(file);
 }
 
+
 function exportJSON(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='zaalverdeling.json';a.click();}
-function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const loaded=JSON.parse(ev.target.result);if(loaded.regels&&!loaded.regels.optioneel)loaded.regels.optioneel=JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL));state=loaded;document.getElementById('importStatus').innerHTML='<span style="color:#16a34a">✅ Configuratie geladen!</span>';showTab('groepen');}catch{alert('Ongeldig JSON-bestand.');}e.target.value='';};r.readAsText(file);}
+function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{state=JSON.parse(ev.target.result);document.getElementById('importStatus').innerHTML='<span style="color:#16a34a">✅ Configuratie geladen!</span>';showTab('groepen');}catch{alert('Ongeldig JSON-bestand.');}e.target.value='';};r.readAsText(file);}
 
 function exportExcel(){
   if(!window.XLSX){alert('XLSX library niet geladen.');return;}
@@ -1204,6 +882,59 @@ function exportExcel(){
   });
   XLSX.writeFile(wb,'rooster.xlsx');
   document.getElementById('exportStatus').innerHTML='<span style="color:#16a34a">✅ Rooster gedownload!</span>';
+}
+
+
+// ── Drag to fill ──
+let _dragSrc={};
+function dragStart(e,dag,gid,time){const a=getA(dag,gid,time);if(!a){e.preventDefault();return;}_dragSrc={dag,gid,time,toestel:a.toestel,isOpwarming:!!a.isOpwarming,isCooldown:!!a.isCooldown};e.dataTransfer.effectAllowed='copy';}
+function dragDrop(e,dag,gid,time){e.preventDefault();if(!_dragSrc.toestel||_dragSrc.dag!==dag||_dragSrc.gid!==gid)return;const ex=getA(dag,gid,time);if(ex&&(ex.isOpwarming||ex.isCooldown))return;setA(dag,gid,time,_dragSrc.toestel,_dragSrc.isOpwarming,_dragSrc.isCooldown);renderRooster();}
+
+// ── Bezetting panel ──
+function renderVrijToestellen(){
+  const dag=document.getElementById('dagSelect')?.value;
+  const panel=document.getElementById('vrijPanel');
+  if(!panel||!dag)return;
+  const times=genTimes(dag);
+  if(!times.length){panel.innerHTML='';return;}
+  panel.innerHTML='<div style="margin-top:6px"><div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Toestelbezetting</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+TOESTELLEN.map(ts=>{
+    const max=state.regels.capaciteit[ts]||99;
+    const overSlots=times.filter(t=>totOp(dag,t,ts)>max).length;
+    const hasRoomSlots=times.filter(t=>{const ag=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));const sm=ag.length?Math.min(...ag.map(g=>g.gymnasten)):1;return totOp(dag,t,ts)+sm<=max;}).length;
+    const roomPct=times.length?Math.round(hasRoomSlots/times.length*100):100;
+    const maxNow=times.reduce((mx,t)=>Math.max(mx,totOp(dag,t,ts)),0);
+    const cls=TS_CLASS[ts]||'ts-tu';
+    const border=overSlots>0?'border:2px solid #dc2626':'border:1px solid #e0e0d8';
+    return '<div style="padding:5px 10px;border-radius:8px;'+border+';min-width:80px;text-align:center" class="'+cls+'"><div style="font-size:11px;font-weight:600">'+SHORT[ts]+'</div><div style="font-size:10px;opacity:.8">piek '+maxNow+'/'+max+'</div><div style="height:4px;background:rgba(0,0,0,.1);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;background:'+(overSlots>0?'#dc2626':roomPct<30?'#d97706':'currentColor')+';opacity:.6;width:'+Math.min(100,100-roomPct)+'%"></div></div></div>';
+  }).join('')+'</div></div>';
+}
+
+// ── Conflict radar ──
+function renderConflictPanel(){
+  const panel=document.getElementById('conflictPanel');if(!panel)return;
+  const conflicts=[];
+  DAGEN.forEach(d=>genTimes(d).forEach(t=>TOESTELLEN.forEach(ts=>{const tot=totOp(d,t,ts),max=state.regels.capaciteit[ts]||99;if(tot>max)conflicts.push({e:'err',msg:d+' '+t+': '+ts+' heeft '+tot+'/'+max+' gymn.'});})));
+  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>conflicts.push({e:'dup',msg:g.naam+': '+ts+' 2x op '+d}));}));
+  const missCount=state.groepen.filter(g=>{const dek=new Set();g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const pts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];pts.forEach(x=>dek.add(x));}}));return getVerplicht(g).some(t=>!dek.has(t));}).length;
+  if(!conflicts.length&&!missCount){panel.innerHTML='<span style="color:#16a34a;font-size:12px">Geen conflicten</span>';return;}
+  panel.innerHTML=conflicts.map(c=>'<div class="cr-item '+(c.e==='err'?'cr-err':'cr-warn')+'">'+(c.e==='err'?'X ':'! ')+c.msg+'</div>').join('')+(missCount?'<div class="cr-item cr-info">i '+missCount+' groep(en) missen nog verplichte toestellen</div>':'');
+}
+
+// ── Per-dag time toggle ──
+function toggleDagRow(dag,checked){const row=document.getElementById('dagrow-'+dag);if(row)row.style.display=checked?'flex':'none';}
+
+// ── addCombo modal ──
+function addCombo(){
+  const opts=TOESTELLEN.map(t=>'<option value="'+t+'">'+t+'</option>').join('');
+  document.getElementById('modalContainer').innerHTML='<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:320px"><div class="modal-title">Combinatie toevoegen</div><label>Toestel A</label><select id="cA">'+opts+'</select><label style="margin-top:8px">Toestel B</label><select id="cB">'+opts+'</select><div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end"><button class="btn" onclick="closeModal()">Annuleer</button><button class="btn btn-primary" onclick="saveCombo()">Toevoegen</button></div></div></div>';
+  document.getElementById('cA').value='Brug';document.getElementById('cB').value='Rek';
+}
+function saveCombo(){
+  const a=document.getElementById('cA').value,b=document.getElementById('cB').value;
+  if(a===b){alert('Kies twee verschillende toestellen.');return;}
+  if(!state.regels.combos)state.regels.combos=[];
+  state.regels.combos.push({a,b,label:(SHORT[a]||a)+'+'+(SHORT[b]||b)});
+  closeModal();renderRegels();
 }
 
 renderSchemas();
