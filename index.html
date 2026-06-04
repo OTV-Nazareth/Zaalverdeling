@@ -48,10 +48,15 @@ label:first-child{margin-top:0}
 .modal{background:#fff;border-radius:14px;padding:1.5rem;width:94%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.18)}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:1rem}
 .timetable{border-collapse:collapse;font-size:12px;min-width:500px}
+.rooster-scroll{overflow:auto;max-height:calc(100vh - 280px);border:1px solid #e0e0d8;border-radius:10px;background:#fff}
+.timetable thead th{position:sticky;top:0;z-index:5;background:#f5f5f0}
+.timetable thead th.gh{position:sticky;top:0;z-index:6}
+.timetable td.time-cell,.timetable td.tc{position:sticky;left:0;z-index:3;background:#fafaf8}
+.timetable td:nth-child(2){position:sticky;left:52px;z-index:3;background:#fafaf8}
 .timetable th{background:#f5f5f0;padding:5px 4px;text-align:center;border:1px solid #e0e0d8;font-weight:500;font-size:11px}
 .timetable th.gh{text-align:left;min-width:80px}
 .timetable td{padding:2px 3px;border:1px solid #e8e8e4;vertical-align:middle;text-align:center;min-width:60px}
-.timetable td.tc{font-size:11px;font-weight:500;color:#888;background:#fafaf8;white-space:nowrap;text-align:right;padding-right:8px}
+.timetable td.time-cell,.timetable td.tc{font-size:11px;font-weight:500;color:#888;background:#fafaf8;white-space:nowrap;text-align:right;padding-right:8px}
 .timetable td.ti{background:#f9f9f7}
 .timetable td.tw{background:#fff0f0}
 .timetable td.cl:hover{background:#eff6ff;cursor:pointer}
@@ -140,6 +145,16 @@ label:first-child{margin-top:0}
     <div class="section-title">Huidig overzicht</div>
     <div class="grid3" id="startStatCards"></div>
   </div>
+  <div class="card" style="margin-top:12px" id="startCloudCard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin:0">☁️ Opgeslagen roosters</div>
+      <div class="btn-group">
+        <button class="btn btn-sm" onclick="renderStartCloudList()">🔄 Vernieuwen</button>
+        <button class="btn btn-primary btn-sm" onclick="openSaveModal()">☁️ Huidig opslaan</button>
+      </div>
+    </div>
+    <div id="startCloudList"><p style="font-size:12px;color:#bbb">Klik op Vernieuwen om opgeslagen roosters te laden.</p></div>
+  </div>
 </div>
 
 <!-- GROEPEN -->
@@ -196,8 +211,17 @@ label:first-child{margin-top:0}
     </select>
     <div id="dagStats" style="font-size:12px;color:#888;flex:1"></div>
     <button class="btn btn-primary btn-sm" onclick="openSolverModal()">✨ Auto-solver</button>
+    <div style="display:flex;align-items:center;gap:4px;margin-left:4px">
+      <button class="btn btn-sm" onclick="roosterZoom(-1)" title="Kleiner">−</button>
+      <span id="zoomLabel" style="font-size:11px;color:#888;min-width:32px;text-align:center">100%</span>
+      <button class="btn btn-sm" onclick="roosterZoom(1)" title="Groter">+</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span style="font-size:11px;color:#888">Breedte:</span>
+      <input type="range" id="colWidthSlider" min="50" max="160" value="80" style="width:80px" oninput="setColWidth(this.value)">
+    </div>
   </div>
-  <div style="overflow-x:auto;border:1px solid #e0e0d8;border-radius:10px;background:#fff">
+  <div class="rooster-scroll" id="roosterScroll">
     <table class="timetable" id="roosterTable"></table>
   </div>
   <div id="vrijPanel" style="margin-top:10px"></div>
@@ -392,6 +416,64 @@ function loadSchema(s){
   state.rooster={};state.nextId=state.groepen.length+1;
   renderSchemas();renderStartStats();showTab('groepen');
 }
+
+async function renderStartCloudList(){
+  const el=document.getElementById('startCloudList');
+  if(!el) return;
+  if(!SUPABASE_URL||!SUPABASE_ANON_KEY){
+    el.innerHTML='<p style="font-size:12px;color:#888">Supabase niet geconfigureerd. Ga naar Export → ⚙️ Configuratie instellen.</p>';
+    return;
+  }
+  el.innerHTML='<p style="font-size:12px;color:#888">Laden…</p>';
+  const lijst=await loadRoostersList();
+  if(!lijst.length){el.innerHTML='<p style="font-size:12px;color:#888">Nog geen opgeslagen roosters.</p>';return;}
+  el.innerHTML='<div style="display:grid;gap:6px">'+lijst.map(r=>{
+    const d=new Date(r.updated_at).toLocaleString('nl-BE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="row" style="flex-wrap:nowrap;gap:8px;padding:8px 0">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500">${r.naam} <span style="font-size:11px;color:#888;font-weight:400">— ${r.seizoen}</span></div>
+        <div style="font-size:11px;color:#aaa">${r.auteur||'onbekend'} · ${d}${r.beschrijving?' · '+r.beschrijving:''}</div>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="doLoadCloud('${r.id}','${r.naam.replace(/'/g,"\\'")}')">📂 Laden</button>
+      <button class="btn btn-sm" onclick="openSaveModal('${r.id}',{naam:'${r.naam.replace(/'/g,"\\'")}',seizoen:'${(r.seizoen||'').replace(/'/g,"\\'")}',beschrijving:'${(r.beschrijving||'').replace(/'/g,"\\'")}',auteur:'${(r.auteur||'').replace(/'/g,"\\'")}'})" title="Overschrijven">💾</button>
+      <button class="btn btn-sm btn-danger" onclick="doDeleteCloud('${r.id}','${r.naam.replace(/'/g,"\\'")}')">🗑</button>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+
+let _roosterZoom = 100;
+let _colWidth = 80;
+
+function roosterZoom(dir){
+  _roosterZoom = Math.max(60, Math.min(150, _roosterZoom + dir * 10));
+  document.getElementById('zoomLabel').textContent = _roosterZoom + '%';
+  const tbl = document.getElementById('roosterTable');
+  if(tbl) tbl.style.fontSize = (_roosterZoom / 100 * 12) + 'px';
+  applyColWidths();
+}
+
+function setColWidth(val){
+  _colWidth = parseInt(val);
+  applyColWidths();
+}
+
+function applyColWidths(){
+  const tbl = document.getElementById('roosterTable');
+  if(!tbl) return;
+  // Apply to all group header cells (th.gh except first two)
+  tbl.querySelectorAll('thead th.gh').forEach((th,i)=>{
+    if(i>1){ // skip tijdslot + vrij columns
+      th.style.minWidth = _colWidth + 'px';
+      th.style.maxWidth = (_colWidth + 20) + 'px';
+    }
+  });
+  // Apply to all data cells
+  tbl.querySelectorAll('tbody td:not(.tc)').forEach((td,i)=>{
+    if(i%1===0) td.style.minWidth = _colWidth + 'px';
+  });
+}
+
 function renderSchemas(){
   document.getElementById('schemaKaarten').innerHTML=SCHEMAS.map(s=>`<div class="schema-card" onclick="loadSchema(SCHEMAS.find(x=>x.id==='${s.id}'))"><div style="font-weight:500;font-size:13px;margin-bottom:3px">${s.titel}</div><div style="font-size:12px;color:#888">${s.beschrijving}</div></div>`).join('');
 }
@@ -409,7 +491,8 @@ function showTab(n){
   ['start','groepen','regels','rooster','validatie','export'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===n?'':'none';});
   document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['start','groepen','regels','rooster','validatie','export'][i]===n));
   if(n==='rooster')renderRooster();if(n==='validatie')renderValidatie();
-  if(n==='regels')renderRegels();if(n==='groepen')renderGroepen();if(n==='start')renderStartStats();
+  if(n==='regels')renderRegels();if(n==='groepen')renderGroepen();
+  if(n==='start'){renderStartStats();renderStartCloudList();}
   if(n==='export')renderCloudList();
 }
 
@@ -649,7 +732,7 @@ function renderRooster(){
     html+='</tr>';
   });
   tbl.innerHTML=html+'</tbody>';
-  setTimeout(()=>{renderVrijToestellen();renderConflictPanel();},0);
+  setTimeout(()=>{renderVrijToestellen();renderConflictPanel();applyColWidths();},0);
 }
 
 function openCelModal(dag,gid,t){
@@ -1240,7 +1323,7 @@ function loadConfig(){
 function saveConfig(url,key,pw){
   localStorage.setItem('zaalverdeling_config',JSON.stringify({url,key,pw}));
   SUPABASE_URL=url;SUPABASE_ANON_KEY=key;CLUB_WACHTWOORD=pw;
-  _supaClient=null;_supaReady=false;_authenticated=false;
+  _supaClient=null;_supaReady=false;_authenticated=false;sessionStorage.removeItem('zv_auth');
   initSupabase();
 }
 
@@ -1305,9 +1388,16 @@ function checkAuth(){
     openConfigModal();return false;
   }
   if(!CLUB_WACHTWOORD){_authenticated=true;return true;}
-  if(_authenticated) return true;
+  // Remember auth for this browser session
+  if(_authenticated||sessionStorage.getItem('zv_auth')==='1') {
+    _authenticated=true;return true;
+  }
   const pw=prompt('Clubwachtwoord:');
-  if(pw===CLUB_WACHTWOORD){_authenticated=true;return true;}
+  if(pw===CLUB_WACHTWOORD){
+    _authenticated=true;
+    sessionStorage.setItem('zv_auth','1');
+    return true;
+  }
   alert('Verkeerd wachtwoord.');return false;
 }
 
@@ -1388,7 +1478,7 @@ async function doSaveCloud(existingId){
   closeModal();
   if(result){
     showCloudStatus(`✅ Opgeslagen: "${naam}"`,'#16a34a');
-    renderCloudList();
+    renderCloudList();renderStartCloudList();
   } else {
     showCloudStatus('❌ Opslaan mislukt. Controleer je Supabase configuratie.','#dc2626');
   }
@@ -1440,7 +1530,7 @@ async function doDeleteCloud(id,naam){
   if(!checkAuth()) return;
   if(!confirm(`Rooster "${naam}" permanent verwijderen?`)) return;
   const ok=await deleteRoosterCloud(id);
-  if(ok){showCloudStatus(`🗑 Verwijderd: "${naam}"`,'#888');renderCloudList();}
+  if(ok){showCloudStatus(`🗑 Verwijderd: "${naam}"`,'#888');renderCloudList();renderStartCloudList();}
   else showCloudStatus('❌ Verwijderen mislukt.','#dc2626');
 }
 
