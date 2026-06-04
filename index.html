@@ -47,9 +47,9 @@ label:first-child{margin-top:0}
 .modal{background:#fff;border-radius:12px;padding:1.5rem;width:94%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:1rem}
 .timetable{border-collapse:collapse;font-size:12px;min-width:500px}
-.timetable th{background:#f5f5f0;padding:7px 8px;text-align:center;border:1px solid #e0e0d8;font-weight:500;font-size:11px;white-space:nowrap}
+.timetable th{background:#f5f5f0;padding:5px 4px;text-align:center;border:1px solid #e0e0d8;font-weight:500;font-size:11px}
 .timetable th.gh{text-align:left;min-width:80px}
-.timetable td{padding:3px 5px;border:1px solid #e8e8e4;vertical-align:middle;text-align:center}
+.timetable td{padding:2px 3px;border:1px solid #e8e8e4;vertical-align:middle;text-align:center;min-width:60px}
 .timetable td.tc{font-size:11px;font-weight:500;color:#888;background:#fafaf8;white-space:nowrap;text-align:right;padding-right:8px}
 .timetable td.ti{background:#f9f9f7}
 .timetable td.tw{background:#fff0f0}
@@ -588,7 +588,18 @@ function renderRooster(){
   if(!gs.length){tbl.innerHTML='<tr><td style="padding:1.5rem;color:#888">Geen groepen ingepland op deze dag.</td></tr>';document.getElementById('dagStats').textContent='';return;}
   document.getElementById('dagStats').textContent=`${gs.length} groepen · ${gs.reduce((s,g)=>s+g.gymnasten,0)} gymnasten`;
   let html='<thead><tr><th class="gh">Tijdslot</th><th class="gh" style="min-width:110px;font-size:10px">Vrij</th>';
-  gs.forEach(g=>{const ti=typeInfo(g.groepType);html+=`<th class="gh"><div>${esc(g.naam)}</div><span class="badge ${ti.badge}" style="font-size:10px">${isComp(g.groepType)?'P'+g.prioriteit:ti.label.split(' ')[0]}</span><div style="font-size:10px;color:#999">${g.start}–${g.eind}</div></th>`;});
+  gs.forEach(g=>{
+    const ti=typeInfo(g.groepType);
+    const tijd=getGroepTijd(g,dag);
+    const shortNaam=g.naam.length>14?g.naam.slice(0,13)+'…':g.naam;
+    html+=`<th class="gh" style="min-width:70px;max-width:90px;cursor:pointer" onclick="this.querySelector('.naam-full').style.display=this.querySelector('.naam-full').style.display==='none'?'':'none';this.querySelector('.naam-short').style.display=this.querySelector('.naam-short').style.display==='none'?'':'none'" title="${esc(g.naam)}">
+      <div class="naam-short" style="font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:85px">${esc(shortNaam)}</div>
+      <div class="naam-full" style="display:none;font-size:11px;font-weight:500;word-break:break-word">${esc(g.naam)}</div>
+      <span class="badge ${ti.badge}" style="font-size:9px;margin-top:1px">${isComp(g.groepType)?'P'+g.prioriteit:ti.label.split(' ')[0]}</span>
+      <div style="font-size:10px;color:#999;white-space:nowrap">${tijd.start}–${tijd.eind}</div>
+      <div style="font-size:10px;color:#555">${g.gymnasten} gymn.</div>
+    </th>`;
+  });
   html+='</tr></thead><tbody>';
   times.forEach(t=>{
         const activeG=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
