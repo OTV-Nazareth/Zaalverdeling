@@ -461,7 +461,11 @@ function groepRow(g,ti){
   ti=ti||typeInfo(g.groepType);
   const dagTags=g.dagen.map(d=>`<span class="tag">${d.slice(0,2)}</span>`).join('');
   const prioSpan=isComp(g.groepType)?`<span class="prio-badge">${g.prioriteit}</span>`:'<span style="width:22px"></span>';
-  return `<div class="row">${prioSpan}<span style="flex:1;font-weight:500;font-size:13px;min-width:120px">${esc(g.naam)}</span><span class="badge ${ti.badge}" style="font-size:10px">${ti.label}</span><span style="font-size:11px;color:#888;min-width:55px">${g.gymnasten} gymn.</span><span style="font-size:11px;color:#888;min-width:90px">${g.start}–${g.eind}</span><span>${dagTags}</span>${g.trainer?`<span style="font-size:10px;color:#888;background:#f5f5f0;padding:1px 6px;border-radius:4px">👤 ${esc(g.trainer)}</span>`:''}<button class="btn btn-sm" onclick="openGroepModal(${g.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="delGroep(${g.id})">🗑</button></div>`;
+  return `<div class="row">${prioSpan}<span style="flex:1;font-weight:500;font-size:13px;min-width:120px">${esc(g.naam)}</span><span class="badge ${ti.badge}" style="font-size:10px">${ti.label}</span><span style="font-size:11px;color:#888;min-width:55px">${g.gymnasten} gymn.</span><span style="font-size:11px;color:#888;min-width:90px">${
+  g.dagTijden&&Object.keys(g.dagTijden).length
+    ?g.dagen.map(d=>{const t=getGroepTijd(g,d);return d.slice(0,2)+': '+t.start+'–'+t.eind;}).join(' · ')
+    :g.start+'–'+g.eind
+}</span><span>${dagTags}</span>${g.trainer?`<span style="font-size:10px;color:#888;background:#f5f5f0;padding:1px 6px;border-radius:4px">👤 ${esc(g.trainer)}</span>`:''}<button class="btn btn-sm" onclick="openGroepModal(${g.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="delGroep(${g.id})">🗑</button></div>`;
 }
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
@@ -477,8 +481,22 @@ function delGroep(id){
 function openGroepModal(id){
   const g=id?state.groepen.find(x=>x.id===id):null;
   const typeOpts=GROEP_TYPES.map(t=>`<option value="${t.id}" ${g&&g.groepType===t.id?'selected':''}>${t.label}</option>`).join('');
-  const dchecks=DAGEN.map(d=>`<label style="display:inline-flex;align-items:center;gap:4px;margin:3px 10px 3px 0;font-size:12px;color:#1a1a1a;cursor:pointer"><input type="checkbox" name="dag" value="${d}" ${g&&g.dagen.includes(d)?'checked':''}> ${d.slice(0,2)}</label>`).join('');
-  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">
+  const dagTijden=g?.dagTijden||{};
+  const defaultStart=g?.start||'17:00', defaultEind=g?.eind||'19:00';
+  const dagRows=DAGEN.map(d=>{
+    const checked=g&&g.dagen.includes(d)?'checked':'';
+    const ds=(dagTijden[d]?.start)||defaultStart;
+    const de=(dagTijden[d]?.eind)||defaultEind;
+    return `<div class="dag-row" id="dagrow-${d}" style="display:${checked?'flex':'none'};align-items:center;gap:6px;margin-bottom:4px;background:#f9f9f7;border-radius:6px;padding:4px 8px">
+      <span style="font-size:12px;font-weight:500;min-width:28px">${d.slice(0,2)}</span>
+      <input type="time" id="ms-${d}" value="${ds}" style="width:90px;padding:3px 6px;font-size:12px">
+      <span style="font-size:11px;color:#888">→</span>
+      <input type="time" id="me-${d}" value="${de}" style="width:90px;padding:3px 6px;font-size:12px">
+    </div>`;
+  }).join('');
+  const dchecks=DAGEN.map(d=>`<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-size:12px;cursor:pointer">
+    <input type="checkbox" name="dag" value="${d}" ${g&&g.dagen.includes(d)?'checked':''} onchange="toggleDagRow('${d}',this.checked)"> ${d.slice(0,2)}</label>`).join('');
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:560px">
     <div class="modal-title">${g?'Groep bewerken':'Nieuwe groep'}</div>
     <label>Naam</label><input id="mN" value="${g?esc(g.naam):''}" placeholder="bv. Gymtopia 2A">
     <div class="form-row"><div><label>Groepstype</label><select id="mT">${typeOpts}</select></div>
@@ -487,14 +505,20 @@ function openGroepModal(id){
       <div><label>Aantal gymnasten</label><input id="mG" type="number" min="1" value="${g?g.gymnasten:10}"></div>
       <div><label>Trainer(s)</label><input id="mTr" value="${g?esc(g.trainer||''):''}" placeholder="bv. Sarah, Tom"></div>
     </div>
-    <div class="form-row" style="margin-top:10px"><div><label>Start</label><input id="mS" type="time" value="${g?g.start:'17:00'}"></div><div><label>Einde</label><input id="mE" type="time" value="${g?g.eind:'19:00'}"></div></div>
-    <label>Trainingsdagen</label><div style="margin-top:4px;line-height:2.2">${dchecks}</div>
+    <label style="margin-top:10px">Trainingsdagen & tijden</label>
+    <div style="margin:6px 0 4px">${dchecks}</div>
+    <div id="dagTimeRows" style="margin-top:4px">${dagRows}</div>
     <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end"><button class="btn" onclick="closeModal()">Annuleer</button><button class="btn btn-primary" onclick="saveGroep(${g?g.id:'null'})">${g?'Opslaan':'Toevoegen'}</button></div>
   </div></div>`;
   tp();
 }
 
-function tp(){} // prioriteit always visible
+function tp(){} // prioriteit
+
+function toggleDagRow(dag, checked){
+  const row=document.getElementById('dagrow-'+dag);
+  if(row) row.style.display=checked?'flex':'none';
+}
 function closeModal(){document.getElementById('modalContainer').innerHTML='';}
 
 function saveGroep(id){
@@ -506,8 +530,15 @@ function saveGroep(id){
   if(!naam){alert('Naam is verplicht.');return;}if(!dagen.length){alert('Selecteer minstens één dag.');return;}
   const trainer=document.getElementById('mTr')?.value.trim()||'';
   const prio=parseInt(document.getElementById('mP').value)||0;
-  if(id){const g=state.groepen.find(x=>x.id===id);Object.assign(g,{naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,dagen,start,eind});}
-  else state.groepen.push({id:state.nextId++,naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,dagen,start,eind});
+  // Collect per-dag tijden
+  const dagTijden={};
+  dagen.forEach(d=>{
+    const ds=document.getElementById('ms-'+d)?.value||start;
+    const de=document.getElementById('me-'+d)?.value||eind;
+    if(ds!==start||de!==eind) dagTijden[d]={start:ds,eind:de};
+  });
+  if(id){const g=state.groepen.find(x=>x.id===id);Object.assign(g,{naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,dagen,start,eind,dagTijden});}
+  else state.groepen.push({id:state.nextId++,naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,dagen,start,eind,dagTijden});
   closeModal();renderGroepen();
 }
 
@@ -603,24 +634,28 @@ function slotStepDag(dag){
 }
 function genTimes(dag){
   const gs=state.groepen.filter(g=>g.dagen.includes(dag));if(!gs.length)return[];
-  const step=slotStepDag(dag);
   const times=new Set();
   gs.forEach(g=>{
-    const gstep=slotStep(g);
-    let[h,m]=g.start.split(':').map(Number);
-    const[eh,em]=g.eind.split(':').map(Number);
-    while(h*60+m<=eh*60+em){
-      // Only add times that align with the day's grid step
-      if((h*60+m)%step===0) times.add(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
-      m+=gstep;if(m>=60){h++;m-=60;}
+    const{start,eind}=getGroepTijd(g,dag);
+    let[hh,mm]=start.split(':').map(Number);
+    const[eh,em]=eind.split(':').map(Number);
+    while(hh*60+mm<=eh*60+em){
+      times.add(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
+      mm+=15;if(mm>=60){hh++;mm-=60;}
     }
   });
   return[...times].sort();
 }
-function isActiveAtTime(g,t){
-  return isActief(g,t); // all groups use 15min grid
+function isActiveAtTime(g,t,dag){
+  return isActief(g,t,dag);
 }
-function isActief(g,t){const s=tM(g.start),e=tM(g.eind),tm=tM(t);return tm>=s&&tm<e;}
+function getGroepTijd(g,dag){
+  return (g.dagTijden&&g.dagTijden[dag])||{start:g.start,eind:g.eind};
+}
+function isActief(g,t,dag){
+  const{start,eind}=dag?getGroepTijd(g,dag):{start:g.start,eind:g.eind};
+  const s=tM(start),e=tM(eind),tm=tM(t);return tm>=s&&tm<e;
+}
 function tM(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
 function getA(d,gid,t){return(state.rooster[d]||[]).find(r=>r.groepId===gid&&r.time===t);}
 function setA(d,gid,t,ts,isOpw){
@@ -671,15 +706,19 @@ function renderRooster(){
   gs.forEach(g=>{const ti=typeInfo(g.groepType);html+=`<th class="gh"><div>${esc(g.naam)}</div><span class="badge ${ti.badge}" style="font-size:10px">${isComp(g.groepType)?'P'+g.prioriteit:ti.label.split(' ')[0]}</span><div style="font-size:10px;color:#999">${g.start}–${g.eind}</div></th>`;});
   html+='</tr></thead><tbody>';
   times.forEach(t=>{
+    // Check which toestellen have room for the SMALLEST group active at this time
+    // "vrij" means: at least one active group could fit
+    const activeGroups=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
+    const smallestGroup=activeGroups.length?Math.min(...activeGroups.map(g=>g.gymnasten)):1;
     const vrijNu=TOESTELLEN.filter(ts=>{
       const tot=totOp(dag,t,ts);
       const max=state.regels.capaciteit[ts]||99;
-      return tot<max;
+      return tot+smallestGroup<=max; // room for at least the smallest group
     });
     const vrijHtml=vrijNu.map(ts=>`<span class="slot ${TS_CLASS[ts]||''}" style="font-size:9px;padding:1px 4px;margin:1px;display:inline-block">${SHORT[ts]}</span>`).join('');
     html+=`<tr><td class="tc">${t}</td><td style="padding:2px 4px;vertical-align:middle;border:1px solid #e8e8e4">${vrijHtml}</td>`;
     gs.forEach(g=>{
-      if(!isActiveAtTime(g,t)){html+='<td class="ti"></td>';return;}
+      if(!isActiveAtTime(g,t,dag)){html+='<td class="ti"></td>';return;}
       const a=getA(dag,g.id,t);
       const ok=a?(totOp(dag,t,a.toestel)<=(state.regels.capaciteit[a.toestel]||999)):true;
       const ti=typeInfo(g.groepType);
@@ -756,12 +795,12 @@ function renderValidatie(){
   const probs=[],dek={};
   state.groepen.forEach(g=>{
     dek[g.id]=new Set();
-    g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek[g.id].add(x));}}));
+    g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek[g.id].add(x));}}));
     getVerplicht(g).forEach(t=>{if(!dek[g.id].has(t))probs.push({e:'warn',txt:`<b>${esc(g.naam)}</b> heeft <b>${t}</b> nog niet gehad.`});});
   });
   DAGEN.forEach(d=>genTimes(d).forEach(t=>TOESTELLEN.forEach(ts=>{const tot=totOp(d,t,ts),max=state.regels.capaciteit[ts]||99;if(tot>max)probs.push({e:'err',txt:`${d} ${t}: <b>${ts}</b> heeft ${tot}/${max} gymn.`});})));
   // Dup: same toestel 2x on same day
-  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>probs.push({e:'warn',txt:`<b>${esc(g.naam)}</b> heeft <b>${ts}</b> 2× op ${d}`}));}));
+  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>probs.push({e:'warn',txt:`<b>${esc(g.naam)}</b> heeft <b>${ts}</b> 2× op ${d}`}));}));
 
   const ingevuld=Object.values(state.rooster).reduce((s,a)=>s+a.length,0);
   const ec=probs.filter(p=>p.e==='err').length,wc=probs.filter(p=>p.e==='warn').length;
@@ -811,11 +850,18 @@ function renderVrijToestellen(){
       const cls=TS_CLASS[ts]||'ts-tu';
       const borderStyle=overSlots>0?'border:2px solid #dc2626':'border:1px solid #e0e0d8';
       const maxNow=times.reduce((mx,t)=>Math.max(mx,totOp(dag,t,ts)),0);
+      // For each time: is there room for the group active at that moment?
+      const hasRoomSlots=times.filter(t=>{
+        const activeG=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
+        const smallest=activeG.length?Math.min(...activeG.map(g=>g.gymnasten)):1;
+        return totOp(dag,t,ts)+smallest<=max;
+      }).length;
+      const roomPct=times.length?Math.round(hasRoomSlots/times.length*100):100;
       return `<div style="padding:5px 10px;border-radius:8px;${borderStyle};min-width:80px;text-align:center" class="${cls}">
         <div style="font-size:11px;font-weight:600">${SHORT[ts]}</div>
-        <div style="font-size:10px;opacity:.8">max ${maxNow}/${max} gymn.</div>
+        <div style="font-size:10px;opacity:.8">piek ${maxNow}/${max} gymn.</div>
         <div style="height:4px;background:rgba(0,0,0,.1);border-radius:2px;margin-top:3px;overflow:hidden">
-          <div style="height:100%;background:${overSlots>0?'#dc2626':'currentColor'};opacity:.6;width:${Math.min(100,pct)}%"></div>
+          <div style="height:100%;background:${overSlots>0?'#dc2626':roomPct<30?'#d97706':'currentColor'};opacity:.6;width:${Math.min(100,100-roomPct)}%"></div>
         </div>
       </div>`;
     }).join('')}
@@ -827,8 +873,8 @@ function renderConflictPanel(){
   const panel=document.getElementById('conflictPanel');if(!panel)return;
   const conflicts=[];
   DAGEN.forEach(d=>genTimes(d).forEach(t=>TOESTELLEN.forEach(ts=>{const tot=totOp(d,t,ts),max=state.regels.capaciteit[ts]||99;if(tot>max)conflicts.push({e:'err',msg:`${d} ${t}: ${ts} heeft ${tot}/${max} gymn.`});})));
-  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>conflicts.push({e:'dup',msg:`${g.naam}: ${ts} 2× op ${d}`}));}));
-  const missCount=state.groepen.filter(g=>{const dek=new Set();g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek.add(x));}}));return getVerplicht(g).some(t=>!dek.has(t));}).length;
+  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>conflicts.push({e:'dup',msg:`${g.naam}: ${ts} 2× op ${d}`}));}));
+  const missCount=state.groepen.filter(g=>{const dek=new Set();g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek.add(x));}}));return getVerplicht(g).some(t=>!dek.has(t));}).length;
   if(!conflicts.length&&!missCount){panel.innerHTML='<span style="color:#16a34a;font-size:12px">✅ Geen conflicten</span>';return;}
   let html=conflicts.map(c=>`<div class="cr-item ${c.e==='err'?'cr-err':'cr-warn'}">${c.e==='err'?'❌':'⚠️'} ${c.msg}</div>`).join('');
   if(missCount)html+=`<div class="cr-item cr-info">ℹ️ ${missCount} groep(en) missen nog verplichte toestellen — zie Validatie-tab</div>`;
@@ -964,8 +1010,9 @@ function runSolver(){
 
     g.dagen.forEach((dag,dagIndex)=>{
       const allSlots=(()=>{
-        const s=[];let[hh,mm]=g.start.split(':').map(Number);
-        const[eh,em]=g.eind.split(':').map(Number);
+        const{start,eind}=getGroepTijd(g,dag);
+        const s=[];let[hh,mm]=start.split(':').map(Number);
+        const[eh,em]=eind.split(':').map(Number);
         while(hh*60+mm<eh*60+em){
           s.push(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
           mm+=15;if(mm>=60){hh++;mm-=60;}
