@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Zaalverdeling Tool — OTV</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;color:#1a1a1a;font-size:14px;background:#f2f1ed;min-height:100vh}
@@ -127,7 +128,8 @@ label:first-child{margin-top:0}
       <div id="importStatus" style="margin-top:10px;font-size:13px"></div>
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f0f0ee">
         <p style="font-size:12px;color:#888;margin-bottom:6px">Laat de solver het rooster automatisch invullen:</p>
-        <button class="btn btn-primary btn-sm" onclick="openSolverModal()">✨ Start auto-solver</button>
+        <button class="btn btn-primary btn-sm" onclick="openSaveModal()">☁️ Opslaan in cloud</button>
+        <button class="btn btn-sm" onclick="openSolverModal()">✨ Auto-solver</button>
       </div>
       <div style="margin-top:.75rem">
         <button class="btn btn-sm" onclick="downloadExcelTemplate()">⬇ Download groepen-template.xlsx</button>
@@ -226,14 +228,38 @@ label:first-child{margin-top:0}
 
 <!-- EXPORT -->
 <div id="tab-export" style="display:none">
-  <div class="card">
-    <div class="section-title">Exporteren</div>
-    <p style="font-size:13px;color:#666;margin-bottom:1rem">Download het rooster als Excel of sla de configuratie op als JSON.</p>
-    <div class="btn-group">
-      <button class="btn btn-primary" onclick="exportExcel()">📊 Download rooster.xlsx</button>
-      <button class="btn" onclick="exportJSON()">💾 Sla op als JSON</button>
+  <div class="grid2" style="margin-bottom:12px">
+    <div class="card">
+      <div class="section-title">☁️ Cloud opslaan (Supabase)</div>
+      <p style="font-size:13px;color:#666;margin-bottom:.75rem">Sla het rooster op in de cloud en laad het terug op elk apparaat.</p>
+      <div class="btn-group" style="margin-bottom:10px">
+        <button class="btn btn-primary" onclick="openSaveModal()">☁️ Nieuw opslaan</button>
+        <button class="btn" onclick="renderCloudList()">🔄 Vernieuwen</button>
+      </div>
+      <div id="cloudStatus" style="font-size:13px;margin-bottom:8px"></div>
+      <div id="cloudList"><p style="font-size:12px;color:#888">Klik op Vernieuwen om opgeslagen roosters te zien.</p></div>
     </div>
-    <div id="exportStatus" style="margin-top:10px;font-size:13px"></div>
+    <div class="card">
+      <div class="section-title">Lokaal exporteren</div>
+      <p style="font-size:13px;color:#666;margin-bottom:1rem">Download het rooster als Excel of sla de configuratie lokaal op als JSON.</p>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="exportExcel()">📊 Download rooster.xlsx</button>
+        <button class="btn" onclick="exportJSON()">💾 Sla op als JSON</button>
+        <button class="btn" onclick="document.getElementById('jsonImportExp').click()">⬆ Laad JSON</button>
+        <input type="file" id="jsonImportExp" accept=".json" style="display:none" onchange="importJSON(event)">
+      </div>
+      <div id="exportStatus" style="margin-top:10px;font-size:13px"></div>
+    </div>
+  </div>
+  <div class="card" style="background:#fffbeb;border-color:#fde68a">
+    <div class="section-title" style="color:#92400e">⚙️ Supabase configuratie</div>
+    <p style="font-size:12px;color:#92400e;margin-bottom:8px">Vul je Supabase gegevens in de HTML in (bovenaan het &lt;script&gt; blok):</p>
+    <code style="font-size:11px;background:#fef3c7;padding:8px 12px;border-radius:6px;display:block;line-height:1.8">
+      SUPABASE_URL = 'https://ijrngudscnyeftqmfhfi.supabase.co'<br>
+      SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqcm5ndWRzY255ZWZ0cW1maGZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzMyNzUsImV4cCI6MjA5NjE0OTI3NX0.mx_ATF2H78ZKP_Zo4nnl3Wyk-tbZaL43-4iRpmTI6Tc'<br>
+      CLUB_WACHTWOORD = 'Toestelverdeling2027'
+    </code>
+    <p style="font-size:11px;color:#92400e;margin-top:8px">Voer ook de SQL uit in je Supabase project (zie de meegeleverde SQL file).</p>
   </div>
 </div>
 </div>
@@ -1193,7 +1219,179 @@ function saveCombo(){
   closeModal();renderRegels();
 }
 
+
+// ═══════════════════════════════════════════
+// SUPABASE CONFIG — vul hieronder jouw gegevens in
+// ═══════════════════════════════════════════
+const SUPABASE_URL = '';      // bv. https://xxxx.supabase.co
+const SUPABASE_ANON_KEY = ''; // jouw anon/public key
+const CLUB_WACHTWOORD = '';   // gedeeld wachtwoord voor de club
+
+let _supaReady = false;
+let _supaClient = null;
+
+function initSupabase(){
+  if(!SUPABASE_URL || !SUPABASE_ANON_KEY){
+    console.warn('Supabase niet geconfigureerd — vul SUPABASE_URL en SUPABASE_ANON_KEY in.');
+    return false;
+  }
+  if(_supaClient) return true;
+  try{
+    // Use the CDN-loaded supabase client
+    _supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    _supaReady = true;
+    return true;
+  } catch(e){
+    console.error('Supabase init failed:', e);
+    return false;
+  }
+}
+
+// ── Auth: simple club password check ──
+let _authenticated = false;
+function checkAuth(){
+  if(!CLUB_WACHTWOORD) return true; // no password set = open
+  if(_authenticated) return true;
+  const pw = prompt('Clubwachtwoord:');
+  if(pw === CLUB_WACHTWOORD){ _authenticated = true; return true; }
+  alert('Verkeerd wachtwoord.'); return false;
+}
+
+// ── Cloud: laad roosters lijst ──
+async function loadRoostersList(){
+  if(!initSupabase()) return [];
+  const{data,error}=await _supaClient
+    .from('roosters')
+    .select('id,naam,seizoen,beschrijving,auteur,updated_at')
+    .order('updated_at',{ascending:false});
+  if(error){console.error(error);return [];}
+  return data||[];
+}
+
+// ── Cloud: sla rooster op ──
+async function saveRoosterCloud(naam,seizoen,beschrijving,auteur,existingId=null){
+  if(!initSupabase()) return null;
+  const payload={naam,seizoen,beschrijving,auteur,state_json:state};
+  let result;
+  if(existingId){
+    result=await _supaClient.from('roosters').update(payload).eq('id',existingId).select().single();
+  } else {
+    result=await _supaClient.from('roosters').insert(payload).select().single();
+  }
+  if(result.error){console.error(result.error);return null;}
+  return result.data;
+}
+
+// ── Cloud: verwijder rooster ──
+async function deleteRoosterCloud(id){
+  if(!initSupabase()) return false;
+  const{error}=await _supaClient.from('roosters').delete().eq('id',id);
+  return !error;
+}
+
+// ── Cloud: laad rooster ──
+async function loadRoosterCloud(id){
+  if(!initSupabase()) return null;
+  const{data,error}=await _supaClient.from('roosters').select('*').eq('id',id).single();
+  if(error){console.error(error);return null;}
+  return data;
+}
+
+// ── UI: open cloud opslaan modal ──
+function openSaveModal(existingId=null,prefill={}){
+  if(!checkAuth()) return;
+  if(!SUPABASE_URL){
+    alert('Supabase is nog niet geconfigureerd.\nVul SUPABASE_URL en SUPABASE_ANON_KEY in de HTML in.');
+    return;
+  }
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">☁️ Opslaan in cloud</div>
+    <label>Naam</label>
+    <input id="sv-naam" value="${prefill.naam||''}" placeholder="bv. Maandag rooster v2">
+    <label>Seizoen</label>
+    <input id="sv-seizoen" value="${prefill.seizoen||'2025-2026'}" placeholder="bv. 2025-2026">
+    <label>Beschrijving</label>
+    <input id="sv-beschr" value="${prefill.beschrijving||''}" placeholder="optioneel">
+    <label>Auteur</label>
+    <input id="sv-auteur" value="${prefill.auteur||''}" placeholder="jouw naam">
+    <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Annuleer</button>
+      <button class="btn btn-primary" onclick="doSaveCloud('${existingId||''}')">💾 Opslaan</button>
+    </div>
+  </div></div>`;
+}
+
+async function doSaveCloud(existingId){
+  const naam=document.getElementById('sv-naam').value.trim();
+  const seizoen=document.getElementById('sv-seizoen').value.trim();
+  const beschr=document.getElementById('sv-beschr').value.trim();
+  const auteur=document.getElementById('sv-auteur').value.trim();
+  if(!naam){alert('Geef een naam op.');return;}
+  const btn=document.querySelector('#modalContainer .btn-primary');
+  if(btn){btn.textContent='Bezig…';btn.disabled=true;}
+  const result=await saveRoosterCloud(naam,seizoen,beschr,auteur,existingId||null);
+  closeModal();
+  if(result){
+    showCloudStatus(`✅ Opgeslagen: "${naam}"`,'#16a34a');
+    renderCloudList();
+  } else {
+    showCloudStatus('❌ Opslaan mislukt. Controleer je Supabase configuratie.','#dc2626');
+  }
+}
+
+function showCloudStatus(msg,color){
+  const el=document.getElementById('cloudStatus');
+  if(el){el.innerHTML=`<span style="color:${color}">${msg}</span>`;}
+}
+
+async function renderCloudList(){
+  const el=document.getElementById('cloudList');
+  if(!el) return;
+  if(!SUPABASE_URL){
+    el.innerHTML='<p style="font-size:12px;color:#888">Supabase nog niet geconfigureerd. Vul SUPABASE_URL en SUPABASE_ANON_KEY in de HTML in.</p>';
+    return;
+  }
+  el.innerHTML='<p style="font-size:12px;color:#888">Laden…</p>';
+  const lijst=await loadRoostersList();
+  if(!lijst.length){el.innerHTML='<p style="font-size:12px;color:#888">Nog geen opgeslagen roosters.</p>';return;}
+  el.innerHTML=lijst.map(r=>{
+    const d=new Date(r.updated_at).toLocaleString('nl-BE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="row" style="flex-wrap:nowrap;gap:6px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500">${r.naam}</div>
+        <div style="font-size:11px;color:#888">${r.seizoen} · ${r.auteur||'onbekend'} · ${d}</div>
+        ${r.beschrijving?`<div style="font-size:11px;color:#aaa">${r.beschrijving}</div>`:''}
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="doLoadCloud('${r.id}','${r.naam.replace(/'/g,"\\'")}')">📂 Laden</button>
+      <button class="btn btn-sm btn-danger" onclick="doDeleteCloud('${r.id}','${r.naam.replace(/'/g,"\\'")}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+async function doLoadCloud(id,naam){
+  if(!checkAuth()) return;
+  if(!confirm(`Rooster "${naam}" laden?\nDit overschrijft de huidige staat.`)) return;
+  showCloudStatus('Laden…','#888');
+  const r=await loadRoosterCloud(id);
+  if(!r){showCloudStatus('❌ Laden mislukt.','#dc2626');return;}
+  if(r.state_json&&r.state_json.regels&&!r.state_json.regels.optioneel)
+    r.state_json.regels.optioneel=JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL));
+  state=r.state_json;
+  showCloudStatus(`✅ Geladen: "${naam}"`,'#16a34a');
+  showTab('groepen');
+}
+
+async function doDeleteCloud(id,naam){
+  if(!checkAuth()) return;
+  if(!confirm(`Rooster "${naam}" permanent verwijderen?`)) return;
+  const ok=await deleteRoosterCloud(id);
+  if(ok){showCloudStatus(`🗑 Verwijderd: "${naam}"`,'#888');renderCloudList();}
+  else showCloudStatus('❌ Verwijderen mislukt.','#dc2626');
+}
+
 renderSchemas();
+initSupabase();
 </script>
 </body>
 </html>
