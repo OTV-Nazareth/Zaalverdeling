@@ -2,1444 +2,1159 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>RijdMee · Gymclub Nazareth</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zaalverdeling Tool — OTV</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root{
-  --bg:#0f172a;--bg2:#1e293b;--bg3:#2d3f5a;
-  --surface:#1e293b;--surface2:#2d3f5a;
-  --border:rgba(255,255,255,0.08);
-  --text:#f1f5f9;--muted:#94a3b8;--faint:#475569;
-  --accent:#e94560;--blue:#4cc9f0;--gold:#f7b731;
-  --green:#22c55e;--danger:#ef4444;
-  --font:'Outfit',system-ui,sans-serif;
-  --nav:56px;--header:52px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;color:#1a1a1a;font-size:14px;background:#f2f1ed;min-height:100vh}
+.app{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 3rem}
+h1{font-size:20px;font-weight:500;margin-bottom:.25rem}
+.subtitle{font-size:13px;color:#888;margin-bottom:1.5rem}
+.tabs{display:flex;gap:2px;border-bottom:1px solid #ddd;margin-bottom:1.5rem;overflow-x:auto}
+.tab{padding:9px 16px;border:none;background:none;cursor:pointer;color:#666;font-size:13px;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;align-items:center;gap:5px}
+.tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
+.tab:hover:not(.active){color:#333;background:#ebebea}
+.card{background:#fff;border:1px solid #e0e0d8;border-radius:10px;padding:1rem 1.25rem}
+.section-title{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.metric{background:#f5f5f0;border-radius:8px;padding:12px 14px}
+.metric-label{font-size:11px;color:#888;margin-bottom:3px}
+.metric-value{font-size:22px;font-weight:500}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500}
+.badge-comp{background:#dbeafe;color:#1e40af}
+.badge-recrea{background:#dcfce7;color:#166534}
+.badge-tumbling{background:#fde8d8;color:#9a3412}
+.badge-err{background:#fee2e2;color:#991b1b}
+.badge-warn{background:#fef9c3;color:#854d0e}
+.row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f2f1ed;flex-wrap:wrap}
+.row:last-child{border-bottom:none}
+.btn{padding:7px 14px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;color:#1a1a1a;display:inline-flex;align-items:center;gap:5px;transition:background .12s}
+.btn:hover{background:#f5f5f0}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-primary:hover{background:#333}
+.btn-danger{color:#dc2626;border-color:#fca5a5;background:#fff}
+.btn-danger:hover{background:#fee2e2}
+.btn-sm{padding:4px 9px;font-size:12px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+input,select{width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a;font-size:13px}
+input:focus,select:focus{outline:2px solid #1a1a1a}
+label{font-size:12px;color:#666;display:block;margin-bottom:3px;margin-top:10px}
+label:first-child{margin-top:0}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:12px;padding:1.5rem;width:94%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:1rem}
+.timetable{border-collapse:collapse;font-size:12px;min-width:500px}
+.timetable th{background:#f5f5f0;padding:7px 8px;text-align:center;border:1px solid #e0e0d8;font-weight:500;font-size:11px;white-space:nowrap}
+.timetable th.gh{text-align:left;min-width:80px}
+.timetable td{padding:3px 5px;border:1px solid #e8e8e4;vertical-align:middle;text-align:center}
+.timetable td.tc{font-size:11px;font-weight:500;color:#888;background:#fafaf8;white-space:nowrap;text-align:right;padding-right:8px}
+.timetable td.ti{background:#f9f9f7}
+.timetable td.tw{background:#fff0f0}
+.timetable td.cl:hover{background:#eff6ff;cursor:pointer}
+.slot{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;white-space:nowrap}
+.slot-comp{background:#dbeafe;color:#1e40af}
+.slot-recrea{background:#dcfce7;color:#166534}
+.slot-tumbling{background:#fde8d8;color:#9a3412}
+/* Toestel kleuren */
+.ts-vloer      {background:#dbeafe;color:#1e3a5f}
+.ts-brug       {background:#fce7f3;color:#831843}
+.ts-rek        {background:#fdf4ff;color:#6b21a8}
+.ts-balk       {background:#dcfce7;color:#14532d}
+.ts-sprong     {background:#fef9c3;color:#713f12}
+.ts-trampo     {background:#ffedd5;color:#7c2d12}
+.ts-tu         {background:#f1f5f9;color:#1e293b}
+.ts-hbrug      {background:#e0f2fe;color:#0c4a6e}
+.ts-ringen     {background:#f0fdf4;color:#052e16}
+.ts-paard      {background:#fdf2f8;color:#500724}
 
-/* ══ MOBIEL layout ══ */
-.mob-only{display:flex}
-.desk-only{display:none}
+/* Gedeeld: donkerdere versie */
+.ts-vloer.shared      {background:#93c5fd;color:#1e3a5f}
+.ts-brug.shared       {background:#f9a8d4;color:#831843}
+.ts-rek.shared        {background:#e9d5ff;color:#6b21a8}
+.ts-balk.shared       {background:#86efac;color:#14532d}
+.ts-sprong.shared     {background:#fde047;color:#713f12}
+.ts-trampo.shared     {background:#fdba74;color:#7c2d12}
+.ts-tu.shared         {background:#cbd5e1;color:#1e293b}
+.ts-hbrug.shared      {background:#7dd3fc;color:#0c4a6e}
+.ts-ringen.shared     {background:#bbf7d0;color:#052e16}
+.ts-paard.shared      {background:#f5d0fe;color:#500724}
 
-/* ══ DESKTOP layout ══ */
-@media(min-width:768px){
-  .mob-only{display:none!important}
-  .desk-only{display:flex!important}
-  body{overflow:hidden}
-  /* Kaart fullscreen achtergrond */
-  #map{position:fixed;inset:0;z-index:0}
-  /* Rechterpaneel */
-  #desk-panel{
-    position:fixed;top:0;right:0;bottom:0;width:360px;
-    background:rgba(15,23,42,0.96);backdrop-filter:blur(16px);
-    border-left:1px solid var(--border);
-    display:flex;flex-direction:column;z-index:10;
-  }
-  #desk-header{
-    height:var(--header);flex-shrink:0;
-    padding:0 16px;display:flex;align-items:center;gap:10px;
-    border-bottom:1px solid var(--border);
-  }
-  #desk-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 16px;-webkit-overflow-scrolling:touch}
-  /* Top bar boven kaart */
-  #desk-topbar{
-    position:fixed;top:12px;left:12px;z-index:5;
-    display:flex;gap:8px;align-items:center;
-  }
-  .map-pill{
-    background:rgba(15,23,42,0.92);backdrop-filter:blur(12px);
-    border:1px solid var(--border);border-radius:20px;
-    padding:6px 14px;font-size:0.85rem;font-weight:600;color:var(--text);
-  }
-  .map-pill span{color:var(--accent)}
-}
+/* Probleem: rode rand */
+.ts-cap-err   {outline:2px solid #dc2626!important;outline-offset:-2px}
 
-/* ══ MOBIEL screens ══ */
-.screen{position:fixed;inset:0;display:none;flex-direction:column}
-.screen.active{display:flex}
-.scroll-content{
-  flex:1;overflow-y:auto;overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  padding:12px 16px;
-  padding-bottom:calc(var(--nav) + 12px + env(safe-area-inset-bottom));
-}
+/* Opwarming / cooldown override */
+.slot-opw  {background:#f0fdf4!important;color:#166534!important;border:1px dashed #86efac}
+.slot-cool {background:#faf5ff!important;color:#6b21a8!important;border:1px dashed #d8b4fe}
+.slot-empty{color:#ccc;font-size:11px}
+.warn-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f2f1ed}
+.warn-item:last-child{border-bottom:none}
+.pbar{height:6px;background:#eee;border-radius:3px;overflow:hidden;width:80px;flex-shrink:0}
+.pbarf{height:100%;border-radius:3px}
+.prio-badge{background:#dbeafe;color:#1e40af;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.schema-card{border:1px solid #e0e0d8;border-radius:10px;padding:1rem;cursor:pointer;transition:border-color .15s,box-shadow .15s;background:#fff}
+.schema-card:hover{border-color:#93c5fd;box-shadow:0 0 0 3px #dbeafe}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;background:#f0f0ee;color:#666;margin:1px}
+.combo-badge{background:#f5e6ff;color:#6b21a8;border-radius:4px;font-size:10px;padding:1px 5px;margin-left:3px}
+.cr-item{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;font-size:12px;border-radius:6px;margin-bottom:3px}
+.cr-err{background:#fee2e2;color:#991b1b}
+.cr-warn{background:#fef9c3;color:#854d0e}
+.cr-info{background:#eff6ff;color:#1e40af}
 
-/* ══ HEADERS ══ */
-.app-header{
-  height:var(--header);flex-shrink:0;
-  background:var(--bg2);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 16px;gap:10px;
-  padding-top:env(safe-area-inset-top);
-}
-.app-header-title{font-size:1rem;font-weight:700;flex:1}
-.icon-btn{width:34px;height:34px;border-radius:50%;background:var(--surface2);border:none;color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s}
-.icon-btn:hover{background:var(--bg3)}
-
-/* ══ BOTTOM NAV (mobiel only) ══ */
-#bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;
-  height:var(--nav);
-  background:rgba(15,23,42,0.97);backdrop-filter:blur(20px);
-  border-top:1px solid var(--border);
-  display:flex;align-items:stretch;z-index:100;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-.nav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;background:none;border:none;cursor:pointer;
-  color:var(--faint);font-family:var(--font);font-size:0.6rem;font-weight:600;
-  letter-spacing:0.05em;text-transform:uppercase;position:relative;transition:color 0.15s;
-}
-.nav-btn .icon{font-size:1.25rem;line-height:1}
-.nav-btn.active{color:var(--accent)}
-.nav-btn.active::after{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
-.notif-dot{position:absolute;top:8px;right:calc(50% - 16px);width:7px;height:7px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
-
-/* ══ KAART ══ */
-.leaflet-tile{filter:invert(100%) hue-rotate(180deg) brightness(0.75) contrast(0.85) saturate(0.7)}
-.leaflet-container{background:#0d1117!important}
-
-/* ══ KAART OVERLAY (mobiel) ══ */
-#map-overlay{position:fixed;inset:0;z-index:200;display:none;flex-direction:column}
-#map-overlay.open{display:flex}
-#mob-map{width:100%;flex:1}
-.map-close-bar{height:var(--header);flex-shrink:0;background:rgba(15,23,42,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;padding-top:env(safe-area-inset-top)}
-
-/* ══ CARDS ══ */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px}
-.card-label{font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
-.sec{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.sec-title{font-size:0.95rem;font-weight:700}
-
-/* ══ CHIPS ══ */
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.chip{background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:0.78rem;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:all 0.15s;font-weight:400}
-.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
-
-/* ══ ROWS ══ */
-.t-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
-.t-row:last-child{border-bottom:none}
-.t-time{font-size:1rem;font-weight:700;color:var(--blue);white-space:nowrap}
-.t-info{flex:1;min-width:0}
-.t-detail{font-size:0.75rem;color:var(--muted);margin-top:2px}
-.dag-label{font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;padding:12px 0 4px}
-.m-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
-.m-row:last-child{border-bottom:none}
-.avatar{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.95rem;font-weight:700;color:var(--accent);flex-shrink:0}
-.m-info{flex:1;min-width:0}
-.m-name{font-size:0.88rem;font-weight:600}
-.m-meta{font-size:0.74rem;color:var(--muted);margin-top:2px}
-.m-actions{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-
-/* ══ FORMS ══ */
-.form-group{margin-bottom:12px}
-label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;font-weight:500}
-input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;font-family:var(--font);font-size:0.88rem;transition:border-color 0.2s}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
-input::placeholder,textarea::placeholder{color:var(--faint)}
-select option{background:var(--bg2)}
-input[type=range]{-webkit-appearance:none;background:var(--surface2);height:4px;border-radius:2px;border:none;padding:0}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer}
-input[type=file]{background:none;border:1px dashed var(--border);color:var(--muted);padding:8px}
-
-/* ══ BUTTONS ══ */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:10px;border:none;font-family:var(--font);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.15s}
-.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#d4314d}
-.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent)}
-.btn-success{background:var(--green);color:#fff}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-ghost{background:none;border:none;color:var(--muted);font-family:var(--font);font-size:0.82rem;cursor:pointer;padding:6px 8px}
-.btn-sm{padding:5px 11px;font-size:0.78rem;border-radius:8px}
-.btn-full{width:100%}
-.btn:disabled{opacity:0.4;cursor:not-allowed}
-.btn-copy{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:var(--green);border-radius:8px;padding:4px 10px;font-size:0.78rem;font-family:var(--font);cursor:pointer;font-weight:600}
-.btn-tel-req{background:rgba(247,183,49,0.1);border:1px solid rgba(247,183,49,0.25);color:var(--gold);border-radius:8px;padding:4px 10px;font-size:0.75rem;font-family:var(--font);cursor:pointer}
-
-/* ══ BADGES ══ */
-.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:700}
-.b-red{background:rgba(233,69,96,0.15);color:var(--accent)}
-.b-blue{background:rgba(76,201,240,0.15);color:var(--blue)}
-.b-green{background:rgba(34,197,94,0.15);color:var(--green)}
-.b-gold{background:rgba(247,183,49,0.15);color:var(--gold)}
-.b-muted{background:var(--surface2);color:var(--muted)}
-
-/* ══ ALERTS ══ */
-.alert{padding:10px 12px;border-radius:10px;font-size:0.82rem;margin-bottom:10px;line-height:1.5}
-.a-info{background:rgba(76,201,240,0.08);border:1px solid rgba(76,201,240,0.2);color:var(--blue)}
-.a-warn{background:rgba(247,183,49,0.08);border:1px solid rgba(247,183,49,0.2);color:var(--gold)}
-.a-success{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:var(--green)}
-
-/* ══ ADMIN TABLE ══ */
-.admin-table{width:100%;border-collapse:collapse;font-size:0.8rem}
-.admin-table th{text-align:left;color:var(--muted);padding:5px 6px;border-bottom:1px solid var(--border);font-weight:500}
-.admin-table td{padding:6px 6px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
-
-/* ══ GRID ══ */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-/* ══ MODALS ══ */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:flex-end;justify-content:center}
-.modal-bg.open{display:flex}
-.modal{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-.modal-handle{width:36px;height:4px;background:var(--faint);border-radius:2px;margin:0 auto 16px}
-.modal-title{font-size:1rem;font-weight:700;margin-bottom:14px}
-
-/* ══ AUTH ══ */
-#auth-screen{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:400;padding:0 16px 40px;display:none}
-#auth-screen.active{display:block}
-.auth-hero{text-align:center;padding:48px 0 24px}
-.auth-hero-icon{font-size:3rem;margin-bottom:12px}
-.auth-hero h1{font-size:2rem;font-weight:700;color:var(--accent);margin-bottom:6px}
-.auth-hero p{font-size:0.88rem;color:var(--muted);line-height:1.6;max-width:320px;margin:0 auto}
-.tab-switcher{display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:16px}
-.tab-pill{flex:1;padding:7px;border:none;border-radius:8px;font-family:var(--font);font-weight:600;font-size:0.85rem;cursor:pointer;background:none;color:var(--muted);transition:all 0.2s}
-.tab-pill.active{background:var(--accent);color:#fff}
-
-/* ══ CONFIG ══ */
-#config-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:999;padding:24px 16px;overflow-y:auto}
-#config-screen.active{display:block}
-
-/* ══ TOAST ══ */
-#toast{position:fixed;bottom:calc(var(--nav) + 10px);left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 18px;border-radius:20px;font-size:0.82rem;z-index:999;opacity:0;transition:all 0.25s;white-space:nowrap;pointer-events:none}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(min-width:768px){#toast{bottom:20px}}
-
-/* ══ SPINNER ══ */
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ══ STRAAL ══ */
-.rr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.slot-drag{cursor:grab}
+.cell-dragging{opacity:.5}
+.cell-drop-target{background:#eff6ff!important}
 </style>
 </head>
 <body>
+<div class="app">
+<h1>🏛️ Zaalverdeling tool</h1>
+<p class="subtitle">OTV — maak, bewerk en valideer het wekelijks toestelrooster</p>
 
-<!-- CONFIG -->
-<div id="config-screen">
-  <div style="max-width:480px;margin:0 auto;padding-top:40px">
-    <div style="font-size:2.5rem;margin-bottom:12px">⚙️</div>
-    <h2 style="font-size:1.3rem;font-weight:700;color:var(--accent);margin-bottom:6px">Supabase configuratie</h2>
-    <p style="color:var(--muted);font-size:0.82rem;margin-bottom:20px">Te vinden in je Supabase project onder Settings → API.</p>
-    <div class="card">
-      <div class="form-group"><label>Supabase URL</label><input type="text" id="cfg-url" placeholder="https://xxxx.supabase.co"></div>
-      <div class="form-group"><label>Supabase Anon Key</label><input type="text" id="cfg-key" placeholder="eyJhbGci..."></div>
-      <button class="btn btn-primary btn-full" onclick="saveConfig()">Opslaan & starten</button>
-    </div>
-  </div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('start')">🏠 Start</button>
+  <button class="tab" onclick="showTab('groepen')">👥 Groepen</button>
+  <button class="tab" onclick="showTab('regels')">⚙️ Regels</button>
+  <button class="tab" onclick="showTab('rooster')">📅 Rooster</button>
+  <button class="tab" onclick="showTab('validatie')">✓ Validatie</button>
+  <button class="tab" onclick="showTab('export')">⬇ Export</button>
 </div>
 
-<!-- AUTH -->
-<div id="auth-screen">
-  <div style="max-width:440px;margin:0 auto">
-    <div class="auth-hero">
-      <div class="auth-hero-icon">🤸</div>
-      <h1>RijdMee</h1>
-      <p>Vind een rijdgenoot naar de training vanuit jouw buurt.</p>
+<!-- START -->
+<div id="tab-start">
+  <div class="grid2" style="margin-bottom:1rem">
+    <div class="card">
+      <div class="section-title">Laad een voorstelschema</div>
+      <p style="font-size:13px;color:#666;margin-bottom:1rem">Kies een startpunt gebaseerd op het huidige rooster van OTV (2025–2026).</p>
+      <div id="schemaKaarten" style="display:grid;gap:8px"></div>
     </div>
     <div class="card">
-      <div class="tab-switcher">
-        <button class="tab-pill active" id="auth-tab-login" onclick="switchAuthTab('login')">Inloggen</button>
-        <button class="tab-pill" id="auth-tab-register" onclick="switchAuthTab('register')">Registreren</button>
+      <div class="section-title">Importeer je eigen data</div>
+      <p style="font-size:13px;color:#666;margin-bottom:.75rem">Upload een eerder opgeslagen JSON of het Excel-template.</p>
+      <div class="btn-group">
+        <button class="btn" onclick="document.getElementById('jsonImport').click()">⬆ Laad JSON</button>
+        <button class="btn btn-primary" onclick="document.getElementById('xlsImport').click()">📥 Importeer Excel-template</button>
       </div>
-      <div id="auth-login">
-        <div class="form-group"><label>E-mail</label><input type="email" id="login-email" placeholder="jouw@email.be"></div>
-        <div class="form-group"><label>Wachtwoord</label><input type="password" id="login-pw" placeholder="••••••••"></div>
-        <button class="btn btn-primary btn-full" onclick="login()">Inloggen</button>
+      <input type="file" id="jsonImport" accept=".json" style="display:none" onchange="importJSON(event)">
+      <input type="file" id="xlsImport" accept=".xlsx,.xls" style="display:none" onchange="importExcelTemplate(event)">
+      <div id="importStatus" style="margin-top:10px;font-size:13px"></div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f0f0ee">
+        <p style="font-size:12px;color:#888;margin-bottom:6px">Laat de solver het rooster automatisch invullen:</p>
+        <button class="btn btn-primary btn-sm" onclick="openSolverModal()">✨ Start auto-solver</button>
       </div>
-      <div id="auth-register" style="display:none">
-        <div class="alert a-info">📬 Je hebt een uitnodigingscode nodig van de clubadmin.</div>
-        <div class="g2">
-          <div class="form-group"><label>Voornaam</label><input type="text" id="reg-vnaam" placeholder="Jana"></div>
-          <div class="form-group"><label>Achternaam</label><input type="text" id="reg-anaam" placeholder="De Backer"></div>
-        </div>
-        <div class="form-group"><label>E-mail</label><input type="email" id="reg-email" placeholder="jouw@email.be"></div>
-        <div class="form-group"><label>Wachtwoord</label><input type="password" id="reg-pw" placeholder="min. 8 tekens"></div>
-        <div class="form-group"><label>Straat</label><input type="text" id="reg-straat" placeholder="Kerkstraat"></div>
-        <div class="g2">
-          <div class="form-group"><label>Huisnr. <span style="color:var(--faint)">(opt.)</span></label><input type="text" id="reg-hnr" placeholder="12"></div>
-          <div class="form-group"><label>Gemeente</label><input type="text" id="reg-gem" placeholder="Nazareth"></div>
-        </div>
-        <div class="form-group"><label>Postcode</label><input type="text" id="reg-pc" placeholder="9810"></div>
-        <div class="form-group"><label>Telefoon <span style="color:var(--faint)">(enkel na match)</span></label><input type="tel" id="reg-tel" placeholder="0470 12 34 56"></div>
-        <div class="form-group"><label>Uitnodigingscode</label><input type="text" id="reg-code" placeholder="GYMCLUB-XXXX" style="text-transform:uppercase;letter-spacing:0.08em"></div>
-        <div class="alert a-info" style="margin-top:4px">👶 Je voegt kinderen toe na registratie via je profiel.</div>
-        <button class="btn btn-primary btn-full" onclick="register()">Account aanmaken</button>
+      <div style="margin-top:.75rem">
+        <button class="btn btn-sm" onclick="downloadExcelTemplate()">⬇ Download groepen-template.xlsx</button>
       </div>
     </div>
   </div>
+  <div id="startStats" style="display:none">
+    <div class="section-title">Huidig overzicht</div>
+    <div class="grid3" id="startStatCards"></div>
+  </div>
 </div>
 
-<!-- ══════════════════════════════
-     DESKTOP LAYOUT
-══════════════════════════════ -->
-<div id="desk-topbar" class="desk-only" style="display:none">
-  <div class="map-pill">RijdMee <span>Gymclub Nazareth</span></div>
+<!-- GROEPEN -->
+<div id="tab-groepen" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div class="section-title" style="margin:0">Alle groepen <span id="groepenTeller" style="font-weight:400;color:#888;font-size:11px"></span></div>
+    <div class="btn-group">
+      <button class="btn btn-sm" onclick="document.getElementById('xlsImport2').click()">📥 Importeer template</button>
+      <input type="file" id="xlsImport2" accept=".xlsx,.xls" style="display:none" onchange="importExcelTemplate(event)">
+      <button class="btn btn-primary btn-sm" onclick="openGroepModal()">+ Groep toevoegen</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:10px;padding:.5rem 1rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <input type="text" id="groepenZoek" placeholder="Zoek op naam…" onkeyup="renderGroepen()" style="width:200px;padding:5px 9px;font-size:12px">
+    <label style="display:inline-flex;align-items:center;gap:5px;margin:0;font-size:12px;color:#666;cursor:pointer"><input type="checkbox" id="filterComp" onchange="renderGroepen()"> Comp</label>
+    <label style="display:inline-flex;align-items:center;gap:5px;margin:0;font-size:12px;color:#666;cursor:pointer"><input type="checkbox" id="filterRecrea" onchange="renderGroepen()"> Recrea</label>
+    <label style="display:inline-flex;align-items:center;gap:5px;margin:0;font-size:12px;color:#666;cursor:pointer"><input type="checkbox" id="filterTumbling" onchange="renderGroepen()"> Tumbling</label>
+  </div>
+  <div id="groepenLijst"></div>
 </div>
-<div id="map"></div>
-<div id="desk-panel" class="desk-only" style="display:none">
-  <div id="desk-header">
-    <div style="flex:1;font-weight:700;font-size:0.95rem">🚗 Rijdgenoten</div>
-    <button class="icon-btn" onclick="openDeskProfiel()" title="Profiel">👤</button>
-    <button class="icon-btn" id="desk-admin-btn" onclick="openDeskAdmin()" title="Admin" style="display:none">⚙️</button>
-  </div>
-  <div id="desk-tabs" style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0">
-    <button class="desk-tab active" onclick="switchDeskTab('matches')" id="desk-tab-matches" style="flex:1;padding:10px 6px;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:0.78rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:0.03em">🚗 Rijdgenoten</button>
-    <button class="desk-tab" onclick="switchDeskTab('home')" id="desk-tab-home" style="flex:1;padding:10px 6px;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:0.78rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:0.03em">📅 Overzicht</button>
-    <button class="desk-tab" onclick="switchDeskTab('admin')" id="desk-tab-admin" style="display:none;flex:1;padding:10px 6px;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:0.78rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:0.03em">⚙️ Admin</button>
-  </div>
-  <div id="desk-body">
-    <!-- TAB: MATCHES -->
-    <div id="desk-tab-content-matches">
-      <div id="desk-seizoen-banner" style="display:none">
-        <div class="alert a-warn" style="flex-direction:column;gap:8px;display:flex">
-          <strong>🔄 Nieuw seizoen!</strong>
-          <button class="btn btn-primary btn-sm" style="align-self:flex-start" onclick="openDeskProfiel();document.getElementById('desk-seizoen-banner').style.display='none'">Groep herbevestigen →</button>
-        </div>
-      </div>
-      <div id="desk-geen-kinderen" style="display:none"><div class="alert a-warn">👶 Voeg eerst een kind toe via je profiel.</div></div>
-      <div id="desk-pending-card" style="display:none;margin-bottom:14px">
-        <div class="sec"><div class="sec-title">🔔 Verzoeken</div></div>
-        <div id="desk-pending-list"></div>
-      </div>
-      <div id="desk-matches-card" style="display:none">
-        <div id="desk-training-chips" class="chips"></div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <label style="margin:0;font-size:0.78rem;color:var(--muted);">Flexibel uurrooster</label>
-        <input type="checkbox" id="desk-flex-tijd" onchange="loadMatchesForContext()" style="width:auto;cursor:pointer;transform:scale(1.2)">
-        <span style="font-size:0.75rem;color:var(--faint)">± 30 min</span>
-      </div>
-        <div style="margin-bottom:10px">
-          <div class="rr"><label style="margin:0">📍 Straal</label><span id="desk-radius-val" style="color:var(--accent);font-weight:700">5 km</span></div>
-          <input type="range" id="desk-radius-slider" min="1" max="30" value="5" oninput="updateDesktopRadius(this.value)" style="width:100%">
-        </div>
-        <div id="desk-matches-list"><div style="color:var(--muted);font-size:0.85rem">Kies een training.</div></div>
+
+<!-- REGELS -->
+<div id="tab-regels" style="display:none">
+  <div class="grid2" style="margin-bottom:12px">
+    <div class="card">
+      <div class="section-title">Max. gymnasten per toestel</div>
+      <div id="capaciteitForm"></div>
+      <div id="maxBlokUI"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0ee">
+        <div class="section-title">Combineerbare toestellen</div>
+        <p style="font-size:11px;color:#888;margin-bottom:8px">Toestellen die naast elkaar staan en tegelijk gebruikt kunnen worden als ze vrij zijn.</p>
+        <div id="combosForm"></div>
       </div>
     </div>
-    <!-- TAB: HOME = Overzicht per training -->
-    <div id="desk-tab-content-home" style="display:none">
-      <div id="desk-overzicht-list"><div style="color:var(--muted);font-size:0.85rem">Laden...</div></div>
+    <div class="card">
+      <div class="section-title">Toestellen per groepstype</div>
+      <p style="font-size:11px;color:#888;margin-bottom:10px">Klik op een knop om te wisselen: <b style="color:#1e40af">blauw</b> = verplicht (waarschuwing als ontbreekt) · <b style="color:#92400e">geel</b> = optioneel (solver mag inplannen) · grijs = niet gebruiken.</p>
+      <div id="verplichtForm"></div>
     </div>
-    <!-- TAB: ADMIN -->
-    <div id="desk-tab-content-admin" style="display:none">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-        <button class="btn btn-primary btn-sm" onclick="showAdminSection('codes','desk-admin-inline-section')">Codes</button>
-        <button class="btn btn-secondary btn-sm" onclick="showAdminSection('groepen','desk-admin-inline-section')">Groepen</button>
-        <button class="btn btn-secondary btn-sm" onclick="showAdminSection('zalen','desk-admin-inline-section')">Zalen</button>
-        <button class="btn btn-secondary btn-sm" onclick="showAdminSection('trainingen','desk-admin-inline-section')">Trainingen</button>
-        <button class="btn btn-secondary btn-sm" onclick="showAdminSection('seizoen','desk-admin-inline-section')">🔄 Seizoen</button>
-      </div>
-      <div id="desk-admin-inline-section"></div>
+  </div>
+  <div class="card">
+    <div class="section-title">Prioriteitsvolgorde competitie</div>
+    <p style="font-size:12px;color:#888;margin-bottom:10px">Sleep om de volgorde te wijzigen. Rang 1 = hoogste prioriteit.</p>
+    <div id="prioriteitLijst"></div>
+  </div>
+</div>
+
+<!-- ROOSTER -->
+<div id="tab-rooster" style="display:none">
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <div class="section-title" style="margin:0">Dag:</div>
+    <select id="dagSelect" onchange="renderRooster()" style="width:auto;min-width:120px">
+      <option>Maandag</option><option>Dinsdag</option><option>Woensdag</option>
+      <option>Donderdag</option><option>Vrijdag</option><option>Zaterdag</option><option>Zondag</option>
+    </select>
+    <div id="dagStats" style="font-size:12px;color:#888;flex:1"></div>
+    <button class="btn btn-primary btn-sm" onclick="openSolverModal()">✨ Auto-solver</button>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #e0e0d8;border-radius:10px;background:#fff">
+    <table class="timetable" id="roosterTable"></table>
+  </div>
+  <div id="vrijPanel" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+    <span style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Vrij nu:</span>
+    <span id="vrijSlots" style="font-size:12px;color:#888">—</span>
+  </div>
+  <div id="legendPanel" style="padding:.5rem 0"></div>
+  <div class="card" style="margin-top:10px;padding:.75rem 1.25rem">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span>📡</span><span style="font-size:12px;font-weight:600;color:#444">Conflict-radar</span>
+      <span style="font-size:11px;color:#888">— bijgewerkt na elke wijziging</span>
+    </div>
+    <div id="conflictPanel"><span style="color:#bbb;font-size:12px">Nog geen rooster geladen.</span></div>
+  </div>
+</div>
+
+<!-- VALIDATIE -->
+<div id="tab-validatie" style="display:none">
+  <div class="grid3" id="validatieStats" style="margin-bottom:1rem"></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="section-title">Problemen &amp; waarschuwingen <span id="probleemTeller" class="badge badge-err" style="display:none;margin-left:4px"></span></div>
+      <div id="probleemLijst"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Toesteldekking per groep</div>
+      <div id="dekkingLijst"></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     MOBIEL LAYOUT
-══════════════════════════════ -->
-
-<!-- Kaart overlay (mobiel) -->
-<div id="map-overlay" class="mob-only" style="display:none">
-  <div class="map-close-bar">
-    <button class="btn btn-secondary btn-sm" onclick="closeMap()">← Terug</button>
-    <div style="flex:1;font-size:0.9rem;font-weight:600;padding-left:8px" id="map-title">Kaart</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span id="mob-radius-val" style="color:var(--accent);font-weight:700;font-size:0.85rem">5 km</span>
-      <input type="range" id="mob-radius-slider" min="1" max="30" value="5" oninput="updateMobRadius(this.value)" style="width:80px">
+<!-- EXPORT -->
+<div id="tab-export" style="display:none">
+  <div class="card">
+    <div class="section-title">Exporteren</div>
+    <p style="font-size:13px;color:#666;margin-bottom:1rem">Download het rooster als Excel of sla de configuratie op als JSON.</p>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="exportExcel()">📊 Download rooster.xlsx</button>
+      <button class="btn" onclick="exportJSON()">💾 Sla op als JSON</button>
     </div>
-  </div>
-  <div id="mob-map" style="flex:1"></div>
-</div>
-
-<!-- Screen: HOME -->
-<div class="screen mob-only active" id="screen-home">
-  <div class="app-header">
-    <div style="flex:1"><div class="app-header-title">RijdMee 🤸</div><div style="font-size:0.72rem;color:var(--muted)">Gymclub Nazareth</div></div>
-    <button class="icon-btn" id="mob-profiel-btn" onclick="setScreen('profiel')" style="display:none">👤</button>
-  </div>
-  <div class="scroll-content">
-    <div id="seizoen-banner" style="display:none">
-      <div class="alert a-warn" style="display:flex;flex-direction:column;gap:8px">
-        <strong>🔄 Nieuw seizoen!</strong>
-        <button class="btn btn-primary btn-sm" style="align-self:flex-start" onclick="setScreen('profiel');document.getElementById('seizoen-banner').style.display='none'">Groep herbevestigen →</button>
-      </div>
-    </div>
-    <div id="geen-kinderen-alert" style="display:none"><div class="alert a-warn">👶 Voeg eerst een kind toe via je profiel.</div></div>
-    <div id="mob-overzicht-list"><div style="color:var(--muted);font-size:0.85rem">Laden...</div></div>
-    <!-- bewaard voor loadPendingRequests compatibiliteit -->
-    <div id="mijn-matches-card" style="display:none"><div id="mijn-matches-list"></div></div>
-    <div id="pending-requests-card" style="display:none"><div id="pending-requests-list"></div></div>
-    <div id="next-training-card" style="display:none"><div id="next-training-widget"></div></div>
+    <div id="exportStatus" style="margin-top:10px;font-size:13px"></div>
   </div>
 </div>
-
-<!-- Screen: MATCHES (mobiel) -->
-<div class="screen mob-only" id="screen-matches">
-  <div class="app-header">
-    <div class="app-header-title">🚗 Rijdgenoten</div>
-    <button class="icon-btn" onclick="openMap()" title="Kaart">🗺</button>
-    <button class="icon-btn" onclick="setScreen('profiel')">👤</button>
-  </div>
-  <div class="scroll-content">
-    <div id="mob-training-chips" class="chips"></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <label style="margin:0;font-size:0.78rem;color:var(--muted);">Flexibel uurrooster</label>
-      <div style="display:flex;align-items:center;gap:6px">
-        <input type="checkbox" id="mob-flex-tijd" onchange="loadMatchesForContext()" style="width:auto;cursor:pointer;transform:scale(1.2)">
-        <span style="font-size:0.75rem;color:var(--faint)">± 30 min</span>
-      </div>
-    </div>
-    <div style="margin-bottom:12px">
-      <div class="rr"><label style="margin:0">📍 Straal</label><span id="mob-radius-val2" style="color:var(--accent);font-weight:700">5 km</span></div>
-      <input type="range" id="mob-radius-slider2" min="1" max="30" value="5" oninput="updateMobRadius2(this.value)" style="width:100%">
-    </div>
-    <div id="mob-matches-list"><div style="color:var(--muted);font-size:0.85rem">Kies een training.</div></div>
-  </div>
 </div>
-
-<!-- Screen: PROFIEL -->
-<div class="screen mob-only" id="screen-profiel">
-  <div class="app-header">
-    <button class="icon-btn" onclick="setScreen('home')" style="margin-right:4px">←</button>
-    <div class="app-header-title">👤 Mijn profiel</div>
-  </div>
-  <div class="scroll-content"><div id="profiel-content">Laden...</div></div>
-</div>
-
-<!-- Screen: ADMIN (mobiel) -->
-<div class="screen mob-only" id="screen-admin">
-  <div class="app-header">
-    <button class="icon-btn" onclick="setScreen('home')" style="margin-right:4px">←</button>
-    <div class="app-header-title">⚙️ Admin</div>
-  </div>
-  <div class="scroll-content">
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      <button class="btn btn-primary btn-sm" onclick="showAdminSection('codes','admin-section')">Codes</button>
-      <button class="btn btn-secondary btn-sm" onclick="showAdminSection('groepen','admin-section')">Groepen</button>
-      <button class="btn btn-secondary btn-sm" onclick="showAdminSection('zalen','admin-section')">Zalen</button>
-      <button class="btn btn-secondary btn-sm" onclick="showAdminSection('trainingen','admin-section')">Trainingen</button>
-      <button class="btn btn-secondary btn-sm" onclick="showAdminSection('seizoen','admin-section')">🔄 Seizoen</button>
-    </div>
-    <div id="admin-section"></div>
-  </div>
-</div>
-
-<!-- Bottom nav (mobiel) -->
-<nav id="bottom-nav" class="mob-only" style="display:none">
-  <button class="nav-btn active" id="nav-home" onclick="setScreen('home')">
-    <span class="icon">🏠</span>Home
-  </button>
-  <button class="nav-btn" id="nav-matches" onclick="setScreen('matches')">
-    <span class="icon">🚗</span>Rijdgenoot
-  </button>
-</nav>
-
-<!-- Desktop modals (profiel + admin) -->
-<div class="modal-bg" id="desk-profiel-modal">
-  <div class="modal" style="max-width:480px;margin:0 auto">
-    <div class="modal-handle"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div class="modal-title" style="margin:0">👤 Mijn profiel</div>
-      <button class="icon-btn" onclick="document.getElementById('desk-profiel-modal').classList.remove('open')">✕</button>
-    </div>
-    <div id="desk-profiel-content">Laden...</div>
-  </div>
-</div>
-<div class="modal-bg" id="desk-admin-modal">
-  <div class="modal" style="max-width:480px;margin:0 auto">
-    <div class="modal-handle"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div class="modal-title" style="margin:0">⚙️ Admin</div>
-      <button class="icon-btn" onclick="document.getElementById('desk-admin-modal').classList.remove('open')">✕</button>
-    </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      <button class="btn btn-primary btn-sm" onclick="showAdminSection('codes','desk-admin-section')">Codes</button>
-      <button class="btn btn-secondary btn-sm" onclick="showAdminSection('groepen','desk-admin-section')">Groepen</button>
-      <button class="btn btn-secondary btn-sm" onclick="showAdminSection('zalen','desk-admin-section')">Zalen</button>
-      <button class="btn btn-secondary btn-sm" onclick="showAdminSection('trainingen','desk-admin-section')">Trainingen</button>
-      <button class="btn btn-secondary btn-sm" onclick="showAdminSection('seizoen','desk-admin-section')">🔄 Seizoen</button>
-    </div>
-    <div id="desk-admin-section"></div>
-  </div>
-</div>
-
-<!-- Adres modal -->
-<div class="modal-bg" id="adres-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="adres-modal-title">Adres toevoegen</div>
-    <div class="form-group"><label>Label</label><input type="text" id="adres-label" placeholder="Thuis, Oma, Papa..."></div>
-    <div class="form-group"><label>Straat</label><input type="text" id="adres-straat" placeholder="Kerkstraat"></div>
-    <div class="g2">
-      <div class="form-group"><label>Huisnr. <span style="color:var(--faint)">(opt.)</span></label><input type="text" id="adres-hnr" placeholder="12"></div>
-      <div class="form-group"><label>Gemeente</label><input type="text" id="adres-gem" placeholder="Gent"></div>
-    </div>
-    <div class="form-group"><label>Postcode</label><input type="text" id="adres-pc" placeholder="9000"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="saveAdres()" style="flex:1">Opslaan</button>
-      <button class="btn btn-secondary" onclick="closeAdresModal()">Annuleer</button>
-    </div>
-  </div>
-</div>
-
-<!-- Kind modal -->
-<div class="modal-bg" id="kind-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="kind-modal-title">Kind toevoegen</div>
-    <div class="form-group"><label>Label</label><input type="text" id="kind-label" placeholder="Kind 1, Kind 2..."></div>
-    <div class="form-group"><label>Groep</label><select id="kind-groep"></select></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="saveKind()" style="flex:1">Opslaan</button>
-      <button class="btn btn-secondary" onclick="closeKindModal()">Annuleer</button>
-    </div>
-  </div>
-</div>
-
-<!-- Bericht modal -->
-<div class="modal-bg" id="bericht-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="bericht-modal-title">Carpool verzoek sturen</div>
-    <div id="bericht-geen-tel-alert" style="display:none">
-      <div class="alert a-warn">⚠️ Je hebt geen telefoonnummer ingevuld. Voeg het toe zodat de rijdgenoot je kan bereiken.
-        <button class="btn btn-secondary btn-sm btn-full" style="margin-top:8px" onclick="closeBerichtModal();setScreen('profiel')">📞 Telefoonnummer toevoegen →</button>
-      </div>
-    </div>
-    <div class="form-group" style="margin-top:8px">
-      <label>Berichtje (optioneel)</label>
-      <textarea id="bericht-tekst" rows="3" placeholder="Hoi, ik rij vanuit Nazareth centrum en kan jouw kind meenemen..."></textarea>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="submitBericht()" style="flex:1">Versturen 🚗</button>
-      <button class="btn btn-secondary" onclick="closeBerichtModal()">Annuleer</button>
-    </div>
-  </div>
-</div>
-
-<!-- Afwijzen modal -->
-<div class="modal-bg" id="afwijzen-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Verzoek afwijzen</div>
-    <div class="form-group">
-      <label>Reden (optioneel — ontvanger ziet dit)</label>
-      <textarea id="afwijzen-tekst" rows="2" placeholder="Ik rij die dag zelf niet..."></textarea>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-danger" onclick="submitAfwijzen()" style="flex:1">Afwijzen</button>
-      <button class="btn btn-secondary" onclick="closeAfwijzenModal()">Annuleer</button>
-    </div>
-  </div>
-</div>
-
-<!-- Terugrit modal -->
-<div class="modal-bg" id="terugrit-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">↩️ Terugrit matchen</div>
-    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px">Wil je ook voor de <strong style="color:var(--text)">terugrit</strong> een rijdgenoot zoeken?</p>
-    <div id="terugrit-matches-list"><div style="color:var(--muted)">Laden...</div></div>
-    <button class="btn btn-secondary btn-full" onclick="document.getElementById('terugrit-modal').classList.remove('open')" style="margin-top:12px">Sluiten</button>
-  </div>
-</div>
-
-<div id="toast"></div>
+<div id="modalContainer"></div>
 
 <script>
-const DAGEN=['maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag'];
-const KIND_KLEUREN=[
-  {bg:'#e94560',text:'#fff'},  // rood
-  {bg:'#4cc9f0',text:'#0f172a'}, // blauw
-  {bg:'#f7b731',text:'#0f172a'}, // goud
-  {bg:'#a855f7',text:'#fff'},  // paars
-  {bg:'#22c55e',text:'#fff'},  // groen
-  {bg:'#f97316',text:'#fff'},  // oranje
-  {bg:'#ec4899',text:'#fff'},  // roze
-  {bg:'#06b6d4',text:'#0f172a'}, // cyan
+const DAGEN=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+
+// All toestellen — split brug/rek and sprong/trampo
+const TOESTELLEN=['Vloer','Brug','Rek','Balk','Sprong','Trampoline','Tumbling (TU)','Herenbrug','Ringen','Paard met bogen'];
+const SHORT={'Vloer':'Vloer','Brug':'Brug','Rek':'Rek','Balk':'Balk','Sprong':'Sprong','Trampoline':'Trampo','Tumbling (TU)':'TU','Herenbrug':'H.brug','Ringen':'Ringen','Paard met bogen':'Paard'};
+function displayTs(ts){
+  if(!ts) return '—';
+  if(ts.startsWith('COMBO:')){
+    return ts.slice(6).split('+').map(t=>SHORT[t]||t).join('+');
+  }
+  return SHORT[ts]||ts;
+}
+
+// Group types: comp-meisjes, comp-jongens, comp-tumbling, recrea-meisjes, recrea-jongens, recrea-tumbling
+const GROEP_TYPES = [
+  {id:'comp-meisjes',   label:'Comp meisjes',   badge:'badge-comp',     slotClass:'slot-comp'},
+  {id:'comp-jongens',   label:'Comp jongens',   badge:'badge-comp',     slotClass:'slot-comp'},
+  {id:'comp-tumbling',  label:'Comp tumbling',  badge:'badge-tumbling', slotClass:'slot-tumbling'},
+  {id:'recrea-meisjes', label:'Recrea meisjes', badge:'badge-recrea',   slotClass:'slot-recrea'},
+  {id:'recrea-jongens', label:'Recrea jongens', badge:'badge-recrea',   slotClass:'slot-recrea'},
+  {id:'recrea-tumbling',label:'Recrea tumbling',badge:'badge-tumbling', slotClass:'slot-tumbling'},
 ];
-function kindKleur(groepId){
-  const idx=currentKinderen.findIndex(k=>k.groep_id===groepId);
-  return KIND_KLEUREN[Math.max(0,idx)%KIND_KLEUREN.length];
-}
-const DAG_NL={maandag:'Ma',dinsdag:'Di',woensdag:'Wo',donderdag:'Do',vrijdag:'Vr',zaterdag:'Za',zondag:'Zo'};
-let sbClient=null,currentUser=null,currentProfile=null,currentKinderen=[];
-let mapInstance=null,mobMapInstance=null;
-let matchMarkers=[],mobMatchMarkers=[];
-let radiusCircle=null,mobRadiusCircle=null;
-let userTrainingen=[],allGroepen=[],editingKindId=null,seizoenPreviewData=[];
-let berichtTarget=null,berichtTrainingId=null,afwijzenRequestId=null;
-let selectedTrainingId=null;
-const isDesktop=()=>window.innerWidth>=768;
 
-// ── CONFIG ──
-function getConfig(){return{url:'https://tiudkjkeiyxeaiaafhay.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpdWRramtlaXl4ZWFpYWFmaGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDg5MDcsImV4cCI6MjA5NjA4NDkwN30.mJrBv2pVLQmNrslYZwtTdhRUUVpFrYzNBVBYvBgUUZ4'};}
-function saveConfig(){const url=document.getElementById('cfg-url').value.trim(),key=document.getElementById('cfg-key').value.trim();if(!url||!key)return showToast('Vul beide velden in');localStorage.setItem('sb_url',url);localStorage.setItem('sb_key',key);location.reload();}
-async function init(){
-  const cfg=getConfig();
-  if(!cfg.url||!cfg.key){document.getElementById('config-screen').classList.add('active');return;}
-  sbClient=window.supabase.createClient(cfg.url,cfg.key);
-  const{data:{session}}=await sbClient.auth.getSession();
-  if(session){currentUser=session.user;await loadProfile();}
-  else showAuthScreen();
+function typeInfo(t){return GROEP_TYPES.find(x=>x.id===t)||GROEP_TYPES[0];}
+function isComp(t){return t&&t.startsWith('comp');}
+function isTumbling(t){return t&&t.includes('tumbling');}
+
+// Default verplichte toestellen per type
+const DEFAULT_VERPLICHT = {
+  'comp-meisjes':   ['Vloer','Brug','Balk','Sprong'],
+  'comp-jongens':   ['Vloer','Rek','Herenbrug','Sprong'],
+  'comp-tumbling':  ['Tumbling (TU)','Trampoline','Vloer'],
+  'recrea-meisjes': ['Vloer','Brug','Balk'],
+  'recrea-jongens': ['Vloer','Rek','Herenbrug','Sprong'],
+  'recrea-tumbling':['Tumbling (TU)','Trampoline'],
+};
+// Optioneel: solver mag inplannen als er ruimte is, geen waarschuwing als het ontbreekt
+const DEFAULT_OPTIONEEL = {
+  'comp-meisjes':   ['Tumbling (TU)','Trampoline'],
+  'comp-jongens':   ['Ringen','Paard met bogen','Trampoline','Tumbling (TU)'],
+  'comp-tumbling':  ['Balk','Sprong'],
+  'recrea-meisjes': ['Sprong','Trampoline','Tumbling (TU)'],
+  'recrea-jongens': ['Paard met bogen','Ringen','Trampoline','Tumbling (TU)'],
+  'recrea-tumbling':['Vloer','Sprong'],
+};
+
+// Combineerbare toestellen (kunnen tegelijk als beide vrij zijn)
+const DEFAULT_COMBOS = [
+  {a:'Brug', b:'Rek',        label:'Brug + Rek'},
+  {a:'Sprong', b:'Trampoline',label:'Sprong + Trampo'},
+];
+
+let state = {
+  groepen: [],
+  regels: {
+    capaciteit: {'Vloer':40,'Brug':12,'Rek':12,'Balk':15,'Sprong':10,'Trampoline':10,'Tumbling (TU)':20,'Herenbrug':8,'Ringen':6,'Paard met bogen':6},
+    verplicht: JSON.parse(JSON.stringify(DEFAULT_VERPLICHT)),
+    optioneel: JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL)),
+    combos: JSON.parse(JSON.stringify(DEFAULT_COMBOS)),
+    maxBlokComp: 60,
+    maxBlokRecrea: 30,
+    cooldownComp: true,
+  },
+  rooster: {},
+  nextId: 1
+};
+
+// ── OTV groepen (met nieuwe types) ──
+const OTV_GROEPEN = [
+  {naam:'A10 en A11',       groepType:'comp-meisjes', prioriteit:1, gymnasten:8,  dagen:['Maandag','Dinsdag','Donderdag','Vrijdag','Zaterdag'],start:'16:00',eind:'19:00'},
+  {naam:'Pupillen I9',      groepType:'comp-meisjes', prioriteit:2, gymnasten:7,  dagen:['Maandag','Dinsdag','Donderdag','Zaterdag'],start:'16:30',eind:'19:30'},
+  {naam:'B-ploeg',          groepType:'comp-meisjes', prioriteit:3, gymnasten:10, dagen:['Maandag','Dinsdag','Woensdag','Vrijdag','Zaterdag'],start:'18:00',eind:'21:00'},
+  {naam:'B10-B12 meisjes',  groepType:'comp-meisjes', prioriteit:4, gymnasten:6,  dagen:['Maandag'],start:'18:00',eind:'21:00'},
+  {naam:'C-14 meisjes',     groepType:'comp-meisjes', prioriteit:5, gymnasten:10, dagen:['Maandag'],start:'17:30',eind:'20:30'},
+  {naam:'C-ploeg +14',      groepType:'comp-meisjes', prioriteit:6, gymnasten:9,  dagen:['Woensdag','Vrijdag','Zaterdag'],start:'17:30',eind:'21:00'},
+  {naam:'C-ploeg -14',      groepType:'comp-meisjes', prioriteit:7, gymnasten:10, dagen:['Woensdag','Zaterdag'],start:'17:30',eind:'21:00'},
+  {naam:'I9 meisjes za',    groepType:'comp-meisjes', prioriteit:8, gymnasten:7,  dagen:['Zaterdag'],start:'09:00',eind:'12:00'},
+  {naam:'B-13',             groepType:'comp-meisjes', prioriteit:9, gymnasten:8,  dagen:['Donderdag','Vrijdag','Zaterdag'],start:'17:30',eind:'21:00'},
+  {naam:'B-ploeg jongens',  groepType:'comp-jongens', prioriteit:10,gymnasten:7,  dagen:['Woensdag','Vrijdag','Zondag'],start:'14:00',eind:'19:30'},
+  {naam:'Pupil jongens',    groepType:'comp-jongens', prioriteit:11,gymnasten:6,  dagen:['Maandag','Vrijdag','Zondag'],start:'16:00',eind:'19:00'},
+  {naam:'B jongens',        groepType:'comp-jongens', prioriteit:12,gymnasten:7,  dagen:['Maandag'],start:'17:00',eind:'19:30'},
+  {naam:'Bploeg jongens zo',groepType:'comp-jongens', prioriteit:13,gymnasten:6,  dagen:['Zondag'],start:'10:30',eind:'13:00'},
+  {naam:'TU comp -16',      groepType:'comp-tumbling',prioriteit:14,gymnasten:15, dagen:['Dinsdag','Donderdag'],start:'19:00',eind:'21:00'},
+  {naam:'TU comp +15',      groepType:'comp-tumbling',prioriteit:15,gymnasten:15, dagen:['Woensdag','Zaterdag'],start:'19:00',eind:'21:00'},
+  {naam:'Tumbling Beloften',groepType:'comp-tumbling',prioriteit:16,gymnasten:15, dagen:['Woensdag'],start:'13:30',eind:'16:00'},
+  {naam:'Tumbling competitie',groepType:'comp-tumbling',prioriteit:17,gymnasten:15,dagen:['Zondag'],start:'13:30',eind:'16:00'},
+  {naam:'Gymtopia 2 jongens 6u', groepType:'recrea-jongens',prioriteit:0,gymnasten:8, dagen:['Maandag','Zondag'],start:'17:00',eind:'19:00'},
+  {naam:'Gymtopia 1 jongens 4u wo',groepType:'recrea-jongens',prioriteit:0,gymnasten:8,dagen:['Woensdag'],start:'17:30',eind:'19:30'},
+  {naam:'Gymtopia 1 jongens za',  groepType:'recrea-jongens',prioriteit:0,gymnasten:8, dagen:['Zaterdag'],start:'10:30',eind:'12:30'},
+  {naam:'Gymtopia 2 jongens zo',  groepType:'recrea-jongens',prioriteit:0,gymnasten:9, dagen:['Zondag'],start:'10:30',eind:'12:30'},
+  {naam:'Gymtopia 1 meisjes 6u',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:10,dagen:['Dinsdag','Woensdag'],start:'17:00',eind:'19:00'},
+  {naam:'Gymtopia 2 meisjes di',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Dinsdag'],start:'17:30',eind:'19:30'},
+  {naam:'Gymtopia 2 meisjes do',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:8, dagen:['Donderdag'],start:'16:30',eind:'19:00'},
+  {naam:'Gymtopia 1B do',         groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Donderdag'],start:'17:00',eind:'19:00'},
+  {naam:'Gymtopia 2B do',         groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Donderdag'],start:'17:00',eind:'19:00'},
+  {naam:'Gymtopia 1A meisjes wo', groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Woensdag'],start:'14:00',eind:'16:00'},
+  {naam:'Gymtopia 2 8u za',       groepType:'recrea-meisjes',prioriteit:0,gymnasten:8, dagen:['Zaterdag'],start:'09:00',eind:'11:30'},
+  {naam:'Gymtopia 2A za',         groepType:'recrea-meisjes',prioriteit:0,gymnasten:10,dagen:['Zaterdag'],start:'10:30',eind:'12:30'},
+  {naam:'Gymtopia 1 6u za',       groepType:'recrea-meisjes',prioriteit:0,gymnasten:10,dagen:['Zaterdag'],start:'16:00',eind:'18:00'},
+  {naam:'Gymtopia 1A meisjes za', groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Zaterdag'],start:'15:30',eind:'17:30'},
+  {naam:'Gymtopia 1B meisjes za', groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Zaterdag'],start:'15:30',eind:'17:30'},
+  {naam:'Gymstars 3',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Woensdag','Zaterdag'],start:'14:00',eind:'15:30'},
+  {naam:'Gymstars 4',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Woensdag','Zaterdag'],start:'17:30',eind:'19:00'},
+  {naam:'Gymstars 5',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Maandag','Zondag'],start:'17:00',eind:'18:30'},
+  {naam:'Gymstars 6',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Maandag','Zondag'],start:'18:30',eind:'20:00'},
+  {naam:'Gymstars 7',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Zaterdag'],start:'11:00',eind:'13:00'},
+  {naam:'TTM 3',       groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Donderdag','Zondag'],start:'18:00',eind:'20:00'},
+  {naam:'TTM 4',       groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Donderdag','Zaterdag'],start:'18:30',eind:'20:30'},
+  {naam:'TTM 5',       groepType:'recrea-meisjes',prioriteit:0,gymnasten:12,dagen:['Donderdag','Zaterdag'],start:'19:00',eind:'21:00'},
+  {naam:'TTM 6/7',     groepType:'recrea-meisjes',prioriteit:0,gymnasten:14,dagen:['Dinsdag','Zondag'],start:'18:00',eind:'20:30'},
+  {naam:'TTM 8',       groepType:'recrea-meisjes',prioriteit:0,gymnasten:10,dagen:['Maandag','Donderdag'],start:'19:00',eind:'21:00'},
+  {naam:'TTJ 3',       groepType:'recrea-jongens',prioriteit:0,gymnasten:8, dagen:['Vrijdag','Zondag'],start:'17:00',eind:'18:30'},
+  {naam:'TTJ 4',       groepType:'recrea-jongens',prioriteit:0,gymnasten:12,dagen:['Vrijdag'],start:'18:30',eind:'20:30'},
+  {naam:'TTJ 4+',      groepType:'recrea-jongens',prioriteit:0,gymnasten:12,dagen:['Zondag'],start:'10:30',eind:'12:30'},
+  {naam:'Tumbling recrea',groepType:'recrea-tumbling',prioriteit:0,gymnasten:15,dagen:['Woensdag','Vrijdag'],start:'18:00',eind:'20:30'},
+  {naam:'Tumbling +15j',  groepType:'recrea-tumbling',prioriteit:0,gymnasten:15,dagen:['Maandag'],start:'19:00',eind:'21:00'},
+  {naam:'Teens',       groepType:'recrea-meisjes',prioriteit:0,gymnasten:14,dagen:['Donderdag'],start:'19:00',eind:'21:00'},
+  {naam:'Kleuters 3',  groepType:'recrea-meisjes',prioriteit:0,gymnasten:26,dagen:['Woensdag','Zaterdag'],start:'09:00',eind:'10:30'},
+  {naam:'Volwassenen toestel',groepType:'recrea-meisjes',prioriteit:0,gymnasten:20,dagen:['Donderdag'],start:'20:30',eind:'21:45'},
+];
+
+const SCHEMAS=[
+  {id:'volledig',titel:'Alle OTV-groepen (2025–2026)',beschrijving:`Alle ${OTV_GROEPEN.length} groepen uit het huidige rooster. Beste startpunt.`,filter:()=>OTV_GROEPEN},
+  {id:'comp',titel:'Alleen competitiegroepen',beschrijving:'Enkel de comp groepen — plan hun rooster eerst, voeg daarna recreatie toe.',filter:()=>OTV_GROEPEN.filter(g=>isComp(g.groepType))},
+  {id:'weekdagen',titel:'Doordeweeks (ma–vr)',beschrijving:'Alle groepen die maandag t/m vrijdag trainen.',filter:()=>OTV_GROEPEN.filter(g=>g.dagen.some(d=>['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'].includes(d)))},
+];
+
+function loadSchema(s){
+  if(state.groepen.length&&!confirm(`Schema "${s.titel}" laden?\nDit vervangt alle huidige groepen en het rooster.`)) return;
+  state.groepen=s.filter().map((g,i)=>({...g,id:i+1}));
+  state.rooster={};state.nextId=state.groepen.length+1;
+  renderSchemas();renderStartStats();showTab('groepen');
 }
 
-// ── AUTH ──
-function showAuthScreen(){document.getElementById('auth-screen').classList.add('active');document.getElementById('bottom-nav').style.display='none';}
-function hideAuthScreen(){
-  document.getElementById('auth-screen').classList.remove('active');
-  if(!isDesktop())document.getElementById('bottom-nav').style.display='flex';
+// ── Drag-to-fill (Excel-style) ──
+let _dragSrc={dag:null,gid:null,time:null,toestel:null,isOpw:false,isCool:false};
+function dragStart(e,dag,gid,time){
+  const a=getA(dag,gid,time);
+  if(!a){e.preventDefault();return;}
+  _dragSrc={dag,gid,time,toestel:a.toestel,isOpw:!!a.isOpwarming,isCool:!!a.isCooldown};
+  e.dataTransfer.effectAllowed='copy';
 }
-function switchAuthTab(tab){const L=tab==='login';document.getElementById('auth-login').style.display=L?'block':'none';document.getElementById('auth-register').style.display=L?'none':'block';document.getElementById('auth-tab-login').className='tab-pill'+(L?' active':'');document.getElementById('auth-tab-register').className='tab-pill'+(!L?' active':'');}
-async function login(){const email=document.getElementById('login-email').value.trim(),pw=document.getElementById('login-pw').value;if(!email||!pw)return showToast('Vul alle velden in');const{data,error}=await sbClient.auth.signInWithPassword({email,password:pw});if(error)return showToast('❌ '+error.message);currentUser=data.user;await loadProfile();}
-async function register(){
-  const v=id=>document.getElementById(id).value.trim();
-  const vnaam=v('reg-vnaam'),anaam=v('reg-anaam'),email=v('reg-email'),pw=document.getElementById('reg-pw').value,straat=v('reg-straat'),hnr=v('reg-hnr'),gem=v('reg-gem'),pc=v('reg-pc'),tel=v('reg-tel'),code=v('reg-code').toUpperCase();
-  if(!vnaam||!anaam||!email||!pw||!straat||!gem||!code)return showToast('Vul alle verplichte velden in');
-  const{data:cd,error:ce}=await sbClient.from('invite_codes').select('*').eq('code',code).single();
-  if(ce||!cd)return showToast('❌ Ongeldige uitnodigingscode');
-  if(cd.used_count>=cd.max_uses)return showToast('❌ Code maximaal gebruikt');
-  if(cd.expires_at&&new Date(cd.expires_at)<new Date())return showToast('❌ Code verlopen');
-  let lat=null,lng=null;
-  try{const adres=`${straat}${hnr?' '+hnr:''}, ${pc} ${gem}, Belgium`;const gd=await(await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(adres)}&limit=1`)).json();if(gd.length){lat=parseFloat(gd[0].lat);lng=parseFloat(gd[0].lon);}}catch(e){}
-  const{error:ae}=await sbClient.auth.signUp({email,password:pw});if(ae)return showToast('❌ '+ae.message);
-  const{data:ld,error:le}=await sbClient.auth.signInWithPassword({email,password:pw});if(le)return showToast('❌ '+le.message);
-  currentUser=ld.user;
-  const{error:pe}=await sbClient.from('profiles').insert({id:currentUser.id,voornaam:vnaam,achternaam:anaam,straat,huisnummer:hnr||null,gemeente:gem,postcode:pc,lat,lng,telefoon:tel||null,carpool_actief:true});
-  if(pe)return showToast('❌ '+pe.message);
-  await sbClient.from('invite_codes').update({used_count:cd.used_count+1}).eq('code',code);
-  showToast('✅ Account aangemaakt!');await loadProfile();
+function dragDrop(e,dag,gid,time){
+  e.preventDefault();
+  if(!_dragSrc.toestel) return;
+  // Only fill same group, same day
+  if(_dragSrc.dag!==dag||_dragSrc.gid!==gid) return;
+  // Don't overwrite opwarming/cooldown with drag
+  const existing=getA(dag,gid,time);
+  if(existing&&(existing.isOpwarming||existing.isCooldown)) return;
+  setA(dag,gid,time,_dragSrc.toestel,_dragSrc.isOpw);
+  renderRooster();
 }
-async function logout(){await sbClient.auth.signOut();currentUser=null;currentProfile=null;currentKinderen=[];showAuthScreen();if(!isDesktop())setScreen('home');}
 
-// ── DESKTOP TABS ──
-function switchDeskTab(name){
-  ['matches','home','admin'].forEach(t=>{
-    const btn=document.getElementById('desk-tab-'+t);
-    const content=document.getElementById('desk-tab-content-'+t);
-    const isActive=t===name;
-    if(btn){btn.style.color=isActive?'var(--accent)':'var(--muted)';btn.style.borderBottomColor=isActive?'var(--accent)':'transparent';}
-    if(content)content.style.display=isActive?'block':'none';
+function renderSchemas(){
+  document.getElementById('schemaKaarten').innerHTML=SCHEMAS.map(s=>`<div class="schema-card" onclick="loadSchema(SCHEMAS.find(x=>x.id==='${s.id}'))"><div style="font-weight:500;font-size:13px;margin-bottom:3px">${s.titel}</div><div style="font-size:12px;color:#888">${s.beschrijving}</div></div>`).join('');
+}
+function renderStartStats(){
+  const el=document.getElementById('startStats');
+  if(!state.groepen.length){el.style.display='none';return;}
+  el.style.display='';
+  document.getElementById('startStatCards').innerHTML=`
+    <div class="metric"><div class="metric-label">Totaal groepen</div><div class="metric-value">${state.groepen.length}</div></div>
+    <div class="metric"><div class="metric-label">Competitie</div><div class="metric-value">${state.groepen.filter(g=>isComp(g.groepType)).length}</div></div>
+    <div class="metric"><div class="metric-label">Ingevulde slots</div><div class="metric-value">${Object.values(state.rooster).reduce((s,a)=>s+a.length,0)}</div></div>`;
+}
+
+function showTab(n){
+  ['start','groepen','regels','rooster','validatie','export'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===n?'':'none';});
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['start','groepen','regels','rooster','validatie','export'][i]===n));
+  if(n==='rooster')renderRooster();if(n==='validatie')renderValidatie();
+  if(n==='regels')renderRegels();if(n==='groepen')renderGroepen();if(n==='start')renderStartStats();
+}
+
+// ── GROEPEN ──
+function renderGroepen(){
+  const zoek=(document.getElementById('groepenZoek')?.value||'').toLowerCase();
+  const oc=document.getElementById('filterComp')?.checked,or=document.getElementById('filterRecrea')?.checked,ot=document.getElementById('filterTumbling')?.checked;
+  let gs=[...state.groepen];
+  if(zoek)gs=gs.filter(g=>g.naam.toLowerCase().includes(zoek));
+  if(oc)gs=gs.filter(g=>isComp(g.groepType)&&!isTumbling(g.groepType));
+  if(or)gs=gs.filter(g=>!isComp(g.groepType)&&!isTumbling(g.groepType));
+  if(ot)gs=gs.filter(g=>isTumbling(g.groepType));
+  document.getElementById('groepenTeller').textContent=`(${state.groepen.length} totaal)`;
+  const el=document.getElementById('groepenLijst');
+  if(!gs.length){el.innerHTML='<p style="color:#888;font-size:13px;padding:.5rem 0">Geen groepen gevonden.</p>';return;}
+  // Group by type
+  let html='';
+  GROEP_TYPES.forEach(t=>{
+    const groepen=gs.filter(g=>g.groepType===t.id).sort((a,b)=>a.prioriteit-b.prioriteit||a.naam.localeCompare(b.naam));
+    if(!groepen.length)return;
+    html+=`<div class="section-title" style="margin-bottom:5px">${t.label}</div><div class="card" style="margin-bottom:10px">`;
+    groepen.forEach(g=>{html+=groepRow(g,t);});
+    html+='</div>';
   });
-  if(name==='admin')showAdminSection('codes','desk-admin-inline-section');
+  el.innerHTML=html;
 }
 
-// ── LAYOUT init ──
-function initLayout(){
-  if(isDesktop()){
-    document.getElementById('desk-topbar').style.display='flex';
-    document.getElementById('desk-panel').style.display='flex';
-    document.getElementById('bottom-nav').style.display='none';
-    initDesktopMap();
-    // Verwijder admin-knop rechtsboven (zit nu als tab)
-    const dab=document.getElementById('desk-admin-btn');if(dab)dab.style.display='none';
-  }else{
-    document.getElementById('bottom-nav').style.display='flex';
+function groepRow(g,ti){
+  ti=ti||typeInfo(g.groepType);
+  const dagTags=g.dagen.map(d=>`<span class="tag">${d.slice(0,2)}</span>`).join('');
+  const prioSpan=isComp(g.groepType)?`<span class="prio-badge">${g.prioriteit}</span>`:'<span style="width:22px"></span>';
+  return `<div class="row">${prioSpan}<span style="flex:1;font-weight:500;font-size:13px;min-width:120px">${esc(g.naam)}</span><span class="badge ${ti.badge}" style="font-size:10px">${ti.label}</span><span style="font-size:11px;color:#888;min-width:55px">${g.gymnasten} gymn.</span><span style="font-size:11px;color:#888;min-width:90px">${g.start}–${g.eind}</span><span>${dagTags}</span>${g.trainer?`<span style="font-size:10px;color:#888;background:#f5f5f0;padding:1px 6px;border-radius:4px">👤 ${esc(g.trainer)}</span>`:''}<button class="btn btn-sm" onclick="openGroepModal(${g.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="delGroep(${g.id})">🗑</button></div>`;
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+function delGroep(id){
+  const g=state.groepen.find(x=>x.id===id);
+  if(!confirm(`"${g.naam}" verwijderen?`))return;
+  state.groepen=state.groepen.filter(x=>x.id!==id);
+  DAGEN.forEach(d=>{if(state.rooster[d])state.rooster[d]=state.rooster[d].filter(r=>r.groepId!==id);});
+  renderGroepen();
+}
+
+function openGroepModal(id){
+  const g=id?state.groepen.find(x=>x.id===id):null;
+  const typeOpts=GROEP_TYPES.map(t=>`<option value="${t.id}" ${g&&g.groepType===t.id?'selected':''}>${t.label}</option>`).join('');
+  const dchecks=DAGEN.map(d=>`<label style="display:inline-flex;align-items:center;gap:4px;margin:3px 10px 3px 0;font-size:12px;color:#1a1a1a;cursor:pointer"><input type="checkbox" name="dag" value="${d}" ${g&&g.dagen.includes(d)?'checked':''}> ${d.slice(0,2)}</label>`).join('');
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <div class="modal-title">${g?'Groep bewerken':'Nieuwe groep'}</div>
+    <label>Naam</label><input id="mN" value="${g?esc(g.naam):''}" placeholder="bv. Gymtopia 2A">
+    <div class="form-row"><div><label>Groepstype</label><select id="mT">${typeOpts}</select></div>
+    <div><label>Prioriteit <span style="font-size:10px;color:#aaa">(recrea = 0)</span></label><input id="mP" type="number" min="0" value="${g&&g.prioriteit!=null?g.prioriteit:isComp(g?.groepType)?state.groepen.filter(x=>isComp(x.groepType)).length+1:0}"></div></div>
+    <div class="form-row">
+      <div><label>Aantal gymnasten</label><input id="mG" type="number" min="1" value="${g?g.gymnasten:10}"></div>
+      <div><label>Trainer(s)</label><input id="mTr" value="${g?esc(g.trainer||''):''}" placeholder="bv. Sarah, Tom"></div>
+    </div>
+    <div class="form-row" style="margin-top:10px"><div><label>Start</label><input id="mS" type="time" value="${g?g.start:'17:00'}"></div><div><label>Einde</label><input id="mE" type="time" value="${g?g.eind:'19:00'}"></div></div>
+    <label>Trainingsdagen</label><div style="margin-top:4px;line-height:2.2">${dchecks}</div>
+    <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end"><button class="btn" onclick="closeModal()">Annuleer</button><button class="btn btn-primary" onclick="saveGroep(${g?g.id:'null'})">${g?'Opslaan':'Toevoegen'}</button></div>
+  </div></div>`;
+  tp();
+}
+
+function tp(){} // prioriteit always visible
+function closeModal(){document.getElementById('modalContainer').innerHTML='';}
+
+function saveGroep(id){
+  const naam=document.getElementById('mN').value.trim();
+  const groepType=document.getElementById('mT').value;
+  const gymn=parseInt(document.getElementById('mG').value)||10;
+  const start=document.getElementById('mS').value,eind=document.getElementById('mE').value;
+  const dagen=[...document.querySelectorAll('input[name="dag"]:checked')].map(x=>x.value);
+  if(!naam){alert('Naam is verplicht.');return;}if(!dagen.length){alert('Selecteer minstens één dag.');return;}
+  const trainer=document.getElementById('mTr')?.value.trim()||'';
+  const prio=parseInt(document.getElementById('mP').value)||0;
+  if(id){const g=state.groepen.find(x=>x.id===id);Object.assign(g,{naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,dagen,start,eind});}
+  else state.groepen.push({id:state.nextId++,naam,groepType,prioriteit:prio,gymnasten:gymn,trainer,dagen,start,eind});
+  closeModal();renderGroepen();
+}
+
+// ── REGELS ──
+function renderRegels(){
+  // Capaciteit
+  document.getElementById('capaciteitForm').innerHTML=TOESTELLEN.map(t=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">${t}</span><input type="number" min="1" style="width:65px" value="${state.regels.capaciteit[t]||20}" onchange="state.regels.capaciteit['${t}']=parseInt(this.value)||20"><span style="font-size:11px;color:#888">gymn.</span></div>`).join('');
+
+  // Max blok
+  document.getElementById('maxBlokUI').innerHTML=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0ee"><div class="section-title">Max. blokduur per toestel</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">Competitie (slots: 15 min)</span><select onchange="state.regels.maxBlokComp=parseInt(this.value)" style="width:140px"><option value="45" ${state.regels.maxBlokComp===45?'selected':''}>Max 45 min</option><option value="60" ${state.regels.maxBlokComp===60?'selected':''}>Max 1 uur</option><option value="90" ${state.regels.maxBlokComp===90?'selected':''}>Max 1,5 uur</option></select></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">Recreatie (slots: 30 min)</span><select onchange="state.regels.maxBlokRecrea=parseInt(this.value)" style="width:140px"><option value="30" ${state.regels.maxBlokRecrea===30?'selected':''}>Max 30 min (2 slots)</option><option value="60" ${state.regels.maxBlokRecrea===60?'selected':''}>Max 1 uur (4 slots)</option></select></div>
+    <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:12px">Cooldown comp (laatste slot)</span><select onchange="state.regels.cooldownComp=this.value==='1'" style="width:140px"><option value="1" ${state.regels.cooldownComp!==false?'selected':''}>Ja, 15 min cooldown</option><option value="0" ${state.regels.cooldownComp===false?'selected':''}>Nee</option></select></div></div>`;
+
+  // Combos
+  document.getElementById('combosForm').innerHTML=(state.regels.combos||[]).map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span class="combo-badge">⟷</span><span style="font-size:12px;flex:1">${c.label}</span><button class="btn btn-sm btn-danger" onclick="removeCombo(${i})">🗑</button></div>`).join('')+`<button class="btn btn-sm" onclick="addCombo()" style="margin-top:4px">+ Combinatie toevoegen</button>`;
+
+  // Verplicht / optioneel / niet per type — 3-state
+  let vhtml='<div style="display:grid;gap:2px;font-size:11px;margin-bottom:8px"><div style="display:flex;gap:4px;align-items:center"><span style="display:inline-block;width:10px;height:10px;background:#1e40af;border-radius:2px"></span> Verplicht &nbsp;<span style="display:inline-block;width:10px;height:10px;background:#d97706;border-radius:2px"></span> Optioneel &nbsp;<span style="display:inline-block;width:10px;height:10px;background:#e5e7eb;border-radius:2px"></span> Niet</div></div>';
+  GROEP_TYPES.forEach(t=>{
+    const v=state.regels.verplicht[t.id]||[];
+    const o=state.regels.optioneel[t.id]||[];
+    vhtml+=`<div style="margin-bottom:14px"><p style="font-size:11px;font-weight:600;color:#444;margin-bottom:6px">${t.label}</p><div style="display:flex;flex-wrap:wrap;gap:6px">`;
+    vhtml+=TOESTELLEN.map(ts=>{
+      const isV=v.includes(ts), isO=o.includes(ts);
+      const state3=isV?'v':isO?'o':'n';
+      const colors={'v':'background:#dbeafe;color:#1e40af;border-color:#93c5fd','o':'background:#fef3c7;color:#92400e;border-color:#fcd34d','n':'background:#f5f5f0;color:#888;border-color:#e5e7eb'};
+      const labels={'v':'verplicht','o':'optioneel','n':'niet'};
+      return `<button onclick="cycleV('${t.id}','${ts}')" title="${labels[state3]}" style="padding:3px 10px;border-radius:6px;border:1px solid;font-size:11px;cursor:pointer;${colors[state3]}">${SHORT[ts]}</button>`;
+    }).join('');
+    vhtml+='</div></div>';
+  });
+  document.getElementById('verplichtForm').innerHTML=vhtml;
+
+  // Prioriteit
+  const comp=state.groepen.filter(g=>isComp(g.groepType)).sort((a,b)=>a.prioriteit-b.prioriteit);
+  const prio=document.getElementById('prioriteitLijst');
+  if(!comp.length){prio.innerHTML='<p style="font-size:12px;color:#888">Geen competitiegroepen.</p>';return;}
+  prio.innerHTML=comp.map((g,i)=>`<div class="row" draggable="true" style="cursor:grab" ondragstart="dragPrio(event,${g.id})" ondragover="event.preventDefault()" ondrop="dropPrio(event,${g.id})" ondragleave="this.style.background=''" ondragenter="this.style.background='#eff6ff'"><span style="color:#bbb">⠿</span><span class="prio-badge">${i+1}</span><span class="badge ${typeInfo(g.groepType).badge}" style="font-size:10px">${typeInfo(g.groepType).label}</span><span style="flex:1;font-size:13px">${esc(g.naam)}</span><span style="font-size:11px;color:#888">${g.gymnasten} gymn.</span></div>`).join('');
+}
+
+function cycleV(type,ts){
+  if(!state.regels.verplicht[type]) state.regels.verplicht[type]=[];
+  if(!state.regels.optioneel[type]) state.regels.optioneel[type]=[];
+  const isV=state.regels.verplicht[type].includes(ts);
+  const isO=state.regels.optioneel[type].includes(ts);
+  // cycle: verplicht → optioneel → niet → verplicht
+  if(isV){
+    state.regels.verplicht[type]=state.regels.verplicht[type].filter(x=>x!==ts);
+    state.regels.optioneel[type].push(ts);
+  } else if(isO){
+    state.regels.optioneel[type]=state.regels.optioneel[type].filter(x=>x!==ts);
+    // now "niet"
+  } else {
+    state.regels.verplicht[type].push(ts);
   }
+  renderRegels();
 }
 
-// ── PROFIEL LADEN ──
-async function loadProfile(){
-  const{data,error}=await sbClient.from('profiles').select('*').eq('id',currentUser.id).single();
-  if(error||!data){showAuthScreen();return;}
-  currentProfile=data;
-  const{data:k}=await sbClient.from('kinderen').select('*, groepen(naam)').eq('ouder_id',currentUser.id).order('label');
-  currentKinderen=k||[];
-  hideAuthScreen();
-  initLayout();
-  await loadAdressen();
-  const pib=document.getElementById('mob-profiel-btn');if(pib)pib.style.display='flex';
-  if(currentProfile.is_admin){
-    // Toon admin tab in desktop panel
-    const dat=document.getElementById('desk-tab-admin');if(dat)dat.style.display='flex';
-    const nav=document.getElementById('bottom-nav');
-    if(!document.getElementById('nav-admin')&&!isDesktop()){
-      const btn=document.createElement('button');btn.className='nav-btn';btn.id='nav-admin';
-      btn.innerHTML='<span class="icon">⚙️</span>Admin';btn.onclick=()=>setScreen('admin');nav.appendChild(btn);
+function addCombo(){
+  const opts=TOESTELLEN.map(t=>`<option value="${t}">${t}</option>`).join('');
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:320px">
+    <div class="modal-title">Combinatie toevoegen</div>
+    <label>Toestel A</label><select id="cA">${opts}</select>
+    <label style="margin-top:8px">Toestel B</label><select id="cB">${opts}</select>
+    <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Annuleer</button>
+      <button class="btn btn-primary" onclick="saveCombo()">Toevoegen</button>
+    </div>
+  </div></div>`;
+  // Pre-select sensible defaults
+  document.getElementById('cA').value='Brug';
+  document.getElementById('cB').value='Rek';
+}
+function saveCombo(){
+  const a=document.getElementById('cA').value;
+  const b=document.getElementById('cB').value;
+  if(a===b){alert('Kies twee verschillende toestellen.');return;}
+  if(!state.regels.combos)state.regels.combos=[];
+  state.regels.combos.push({a,b,label:`${a}+${b}`});
+  closeModal();renderRegels();
+}
+function removeCombo(i){state.regels.combos.splice(i,1);renderRegels();}
+
+let dragId=null;
+function dragPrio(e,id){dragId=id;}
+function dropPrio(e,tid){e.currentTarget.style.background='';if(dragId===tid)return;const comp=state.groepen.filter(g=>isComp(g.groepType)).sort((a,b)=>a.prioriteit-b.prioriteit);const fi=comp.findIndex(g=>g.id===dragId),ti=comp.findIndex(g=>g.id===tid);comp.splice(ti,0,comp.splice(fi,1)[0]);comp.forEach((g,i)=>g.prioriteit=i+1);renderRegels();}
+
+// ── ROOSTER helpers ──
+function slotStep(g){ return 15; } // always 15min grid
+function slotStepDag(dag){
+  return 15; // always 15min grid
+}
+function genTimes(dag){
+  const gs=state.groepen.filter(g=>g.dagen.includes(dag));if(!gs.length)return[];
+  const step=slotStepDag(dag);
+  const times=new Set();
+  gs.forEach(g=>{
+    const gstep=slotStep(g);
+    let[h,m]=g.start.split(':').map(Number);
+    const[eh,em]=g.eind.split(':').map(Number);
+    while(h*60+m<=eh*60+em){
+      // Only add times that align with the day's grid step
+      if((h*60+m)%step===0) times.add(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      m+=gstep;if(m>=60){h++;m-=60;}
     }
-  }
-  if(!currentKinderen.length){
-    document.getElementById('geen-kinderen-alert').style.display='block';
-    document.getElementById('desk-geen-kinderen').style.display='block';
-  }else{
-    document.getElementById('geen-kinderen-alert').style.display='none';
-    document.getElementById('desk-geen-kinderen').style.display='none';
-    await checkSeizoenBanner();
-    await loadTrainingen();
-    await loadNextTraining();
-    await loadPendingRequests();
-    await loadMijnMatches();
-    document.getElementById('desk-matches-card').style.display='block';
-  }
-}
-
-// ── KAARTEN ──
-function initDesktopMap(){
-  if(mapInstance)return;
-  const center=currentProfile?.lat?[currentProfile.lat,currentProfile.lng]:[50.967,3.735];
-  mapInstance=L.map('map',{zoomControl:true,attributionControl:false}).setView(center,12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
-  if(currentProfile?.lat)addOwnMarker(mapInstance);
-}
-function initMobMap(){
-  if(mobMapInstance)return;
-  const center=currentProfile?.lat?[currentProfile.lat,currentProfile.lng]:[50.967,3.735];
-  mobMapInstance=L.map('mob-map',{zoomControl:true,attributionControl:false}).setView(center,12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mobMapInstance);
-  if(currentProfile?.lat)addOwnMarker(mobMapInstance);
-}
-function addOwnMarker(map){
-  L.marker([currentProfile.lat,currentProfile.lng],{
-    icon:L.divIcon({html:'<div style="background:#e94560;border:2.5px solid white;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(233,69,96,0.5)">🏠</div>',iconSize:[34,34],iconAnchor:[17,34],className:''})
-  }).addTo(map).bindPopup('📍 Jij');
-}
-function openMap(){
-  document.getElementById('map-overlay').style.display='flex';
-  initMobMap();
-  setTimeout(()=>mobMapInstance?.invalidateSize(),100);
-  const t=userTrainingen.find(t=>t.id===selectedTrainingId);
-  document.getElementById('map-title').textContent=t?`${DAG_NL[t.dag]||t.dag} ${t.start_tijd} · ${t.zalen?.naam||'?'}`:'Kaart';
-  renderMarkersOnMap(mobMapInstance,mobMatchMarkers,mobRadiusCircle,(c)=>{mobRadiusCircle=c;});
-}
-function closeMap(){document.getElementById('map-overlay').style.display='none';}
-function updateDesktopRadius(val){
-  document.getElementById('desk-radius-val').textContent=val+' km';
-  if(radiusCircle&&currentProfile?.lat){radiusCircle.setRadius(val*1000);zoomToRadius(mapInstance,val);}
-  loadMatchesForContext();
-}
-function updateMobRadius(val){
-  document.getElementById('mob-radius-val').textContent=val+' km';
-  if(mobRadiusCircle&&currentProfile?.lat){mobRadiusCircle.setRadius(val*1000);zoomToRadius(mobMapInstance,val);}
-}
-function updateMobRadius2(val){
-  document.getElementById('mob-radius-val2').textContent=val+' km';
-  document.getElementById('mob-radius-slider').value=val;
-  if(mobRadiusCircle&&currentProfile?.lat){mobRadiusCircle.setRadius(val*1000);}
-  loadMatchesForContext();
-}
-function zoomToRadius(map,val){if(!map||!currentProfile?.lat)return;const zoom=val<=3?14:val<=7?13:val<=15?12:val<=25?11:10;map.setView([currentProfile.lat,currentProfile.lng],zoom,{animate:true});}
-
-// ── TRAININGEN ──
-async function loadTrainingen(){
-  if(!currentKinderen.length)return;
-  const groepIds=[...new Set(currentKinderen.map(k=>k.groep_id))];
-  const{data}=await sbClient.from('trainingen').select('*, zalen(naam,adres,lat,lng), groepen(naam)').in('groep_id',groepIds).eq('active',true);
-  userTrainingen=data||[];
-  renderChips('mob-training-chips');
-  renderChips('desk-training-chips');
-  renderTrainingenList();
-  await loadOverzicht();
-}
-function renderChips(containerId){
-  const el=document.getElementById(containerId);if(!el||!userTrainingen.length)return;
-  el.innerHTML=userTrainingen.map((t,i)=>{
-    const k=currentKinderen.find(k=>k.groep_id===t.groep_id);
-    const lbl=`${DAG_NL[t.dag]||t.dag} ${t.start_tijd}`;
-    const sub=k?.label||t.groepen?.naam||'?';
-    const isActive=selectedTrainingId?selectedTrainingId===t.id:i===0;
-    const kleur=kindKleur(t.groep_id);
-    const chipStyle=isActive
-      ?`background:${kleur.bg};color:${kleur.text};border-color:${kleur.bg};font-weight:600`
-      :`background:rgba(${hexToRgb(kleur.bg)},0.15);color:${kleur.bg};border-color:rgba(${hexToRgb(kleur.bg)},0.3);font-weight:400`;
-    return`<button class="chip" style="${chipStyle}" data-id="${t.id}" onclick="selectChip('${t.id}','${containerId}')">${lbl} <span style="opacity:0.8;font-size:0.72rem">${sub}</span></button>`;
-  }).join('');
-  if(!selectedTrainingId&&userTrainingen.length){
-    selectedTrainingId=userTrainingen[0].id;
-    loadMatchesForContext();
-  }
-}
-function hexToRgb(hex){
-  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return`${r},${g},${b}`;
-}
-function selectChip(id,containerId){
-  selectedTrainingId=id;
-  // Sync beide chip containers met correcte kleuren
-  ['mob-training-chips','desk-training-chips'].forEach(cid=>{
-    renderChips(cid);
   });
-  loadMatchesForContext();
+  return[...times].sort();
 }
-function renderTrainingenList(){
-  // Alleen gebruikt op ... eigenlijk niet meer nodig als aparte tab
-  // Maar we houden de data beschikbaar voor next-training
+function isActiveAtTime(g,t){
+  return isActief(g,t); // all groups use 15min grid
 }
-async function loadNextTraining(){
-  const w=document.getElementById('next-training-widget');
-  const dw=document.getElementById('desk-next-training-widget');
-  const dcard2=document.getElementById('desk-next-training-card');
-  const card=document.getElementById('next-training-card');
-  if(!w||!userTrainingen.length){if(card)card.style.display='none';return;}
-  card.style.display='block';
-  const now=new Date();
-  const dagOrder=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
-  let found=null;
-  for(let i=0;i<7;i++){const day=dagOrder[(now.getDay()+i)%7];for(const slot of userTrainingen.filter(t=>t.dag===day)){if(i===0){const[h,m]=slot.start_tijd.split(':').map(Number);const st=new Date();st.setHours(h,m,0);if(st<=now)continue;}found={slot,daysAway:i};break;}if(found)break;}
-  if(!found){w.innerHTML='<div style="color:var(--muted);font-size:0.85rem">Geen komende training.</div>';return;}
-  const{slot,daysAway}=found;const when=daysAway===0?'Vanavond':daysAway===1?'Morgen':`Over ${daysAway} dagen`;
-  const k=currentKinderen.find(k=>k.groep_id===slot.groep_id);
-  const ntwHtml=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-    <div><div style="font-size:1.5rem;font-weight:700;color:var(--blue)">${slot.start_tijd}</div>
-    <div style="color:var(--muted);font-size:0.78rem;margin-top:2px">${when} · ${slot.zalen?.naam||'?'}</div>
-    <div style="margin-top:5px"><span class="badge b-red">${k?.label||slot.groepen?.naam||'?'}</span></div></div>
-    <button class="btn btn-primary btn-sm" onclick="setScreen('matches');selectChip('${slot.id}','mob-training-chips')">🚗 Vind rijdgenoot</button>
+function isActief(g,t){const s=tM(g.start),e=tM(g.eind),tm=tM(t);return tm>=s&&tm<e;}
+function tM(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function getA(d,gid,t){return(state.rooster[d]||[]).find(r=>r.groepId===gid&&r.time===t);}
+function setA(d,gid,t,ts,isOpw){
+  if(!state.rooster[d])state.rooster[d]=[];
+  state.rooster[d]=state.rooster[d].filter(r=>!(r.groepId===gid&&r.time===t));
+  if(ts)state.rooster[d].push({groepId:gid,time:t,toestel:ts,isOpwarming:!!isOpw});
+  setTimeout(renderConflictPanel,50);
+}
+function setAModal(d,gid,t,wasOpw){
+  const ts=document.getElementById('cT').value;
+  const isOpw=document.getElementById('cOpw')?.checked||false;
+  const isCool=document.getElementById('cCool')?.checked||false;
+  if(!state.rooster[d])state.rooster[d]=[];
+  state.rooster[d]=state.rooster[d].filter(r=>!(r.groepId===gid&&r.time===t));
+  if(ts)state.rooster[d].push({groepId:gid,time:t,toestel:ts,isOpwarming:isOpw,isCooldown:isCool});
+  setTimeout(renderConflictPanel,50);
+}
+function totOp(d,t,ts){return(state.rooster[d]||[]).filter(r=>r.time===t&&r.toestel===ts).reduce((s,r)=>{const g=state.groepen.find(x=>x.id===r.groepId);return s+(g?g.gymnasten:0);},0);}
+function getVerplicht(g){return state.regels.verplicht[g.groepType]||[];}
+
+// ── ROOSTER render ──
+
+const TS_CLASS = {
+  'Vloer':'ts-vloer','Brug':'ts-brug','Rek':'ts-rek','Balk':'ts-balk',
+  'Sprong':'ts-sprong','Trampoline':'ts-trampo','Tumbling (TU)':'ts-tu',
+  'Herenbrug':'ts-hbrug','Ringen':'ts-ringen','Paard met bogen':'ts-paard'
+};
+function tsClass(ts, dag, time, gymn, isOpw, isCool){
+  if(isOpw) return 'slot slot-opw';
+  if(isCool) return 'slot slot-cool';
+  if(!ts) return 'slot';
+  const base = ts.startsWith('COMBO:') ? TS_CLASS[ts.slice(6).split('+')[0]] : (TS_CLASS[ts]||'ts-tu');
+  const tot = totOp(dag,time,ts);
+  const max = state.regels.capaciteit[ts]||99;
+  const isShared = tot > (gymn||0); // others are also on this toestel
+  const isErr = tot > max;
+  return 'slot ' + base + (isShared?' shared':'') + (isErr?' ts-cap-err':'');
+}
+
+function renderRooster(){
+  const dag=document.getElementById('dagSelect').value;
+  const times=genTimes(dag);
+  const gs=state.groepen.filter(g=>g.dagen.includes(dag)).sort((a,b)=>{if(isComp(a.groepType)!==isComp(b.groepType))return isComp(a.groepType)?-1:1;return a.prioriteit-b.prioriteit;});
+  const tbl=document.getElementById('roosterTable');
+  if(!gs.length){tbl.innerHTML='<tr><td style="padding:1.5rem;color:#888">Geen groepen ingepland op deze dag.</td></tr>';document.getElementById('dagStats').textContent='';return;}
+  document.getElementById('dagStats').textContent=`${gs.length} groepen · ${gs.reduce((s,g)=>s+g.gymnasten,0)} gymnasten`;
+  let html='<thead><tr><th class="gh">Tijdslot</th><th class="gh" style="min-width:120px;font-size:10px">Vrij</th>';
+  gs.forEach(g=>{const ti=typeInfo(g.groepType);html+=`<th class="gh"><div>${esc(g.naam)}</div><span class="badge ${ti.badge}" style="font-size:10px">${isComp(g.groepType)?'P'+g.prioriteit:ti.label.split(' ')[0]}</span><div style="font-size:10px;color:#999">${g.start}–${g.eind}</div></th>`;});
+  html+='</tr></thead><tbody>';
+  times.forEach(t=>{
+    const vrijNu=TOESTELLEN.filter(ts=>{
+      const tot=totOp(dag,t,ts);
+      const max=state.regels.capaciteit[ts]||99;
+      return tot<max;
+    });
+    const vrijHtml=vrijNu.map(ts=>`<span class="slot ${TS_CLASS[ts]||''}" style="font-size:9px;padding:1px 4px;margin:1px;display:inline-block">${SHORT[ts]}</span>`).join('');
+    html+=`<tr><td class="tc">${t}</td><td style="padding:2px 4px;vertical-align:middle;border:1px solid #e8e8e4">${vrijHtml}</td>`;
+    gs.forEach(g=>{
+      if(!isActiveAtTime(g,t)){html+='<td class="ti"></td>';return;}
+      const a=getA(dag,g.id,t);
+      const ok=a?(totOp(dag,t,a.toestel)<=(state.regels.capaciteit[a.toestel]||999)):true;
+      const ti=typeInfo(g.groepType);
+            const opwLabel=a&&a.isOpwarming?'<span style="font-size:9px;opacity:.6;display:block;line-height:1">opw.</span>':a&&a.isCooldown?'<span style="font-size:9px;opacity:.6;display:block;line-height:1">cool.</span>':'';
+      const slotCls=a?tsClass(a.toestel,dag,t,g.gymnasten,a.isOpwarming,a.isCooldown):'';
+      html+=`<td class="cl" onclick="openCelModal('${dag}',${g.id},'${t}')"
+        draggable="${a?'true':'false'}"
+        ondragstart="dragStart(event,'${dag}',${g.id},'${t}')"
+        ondragover="event.preventDefault();this.classList.add('cell-drop-target')"
+        ondragleave="this.classList.remove('cell-drop-target')"
+        ondrop="dragDrop(event,'${dag}',${g.id},'${t}');this.classList.remove('cell-drop-target')"><span class="${slotCls}">${a?esc(displayTs(a.toestel)):'<span style="color:#ddd">—</span>'}</span>${a?opwLabel:''}</td>`;
+    });
+    html+='</tr>';
+  });
+  tbl.innerHTML=html+'</tbody>';
+  renderVrijToestellen();
+  const legEl=document.getElementById("legendPanel");if(legEl)legEl.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center"><span style="font-size:10px;color:#888">Kleuren:</span>${TOESTELLEN.map(ts=>`<span class="slot ${TS_CLASS[ts]||''}" style="font-size:10px;padding:1px 6px">${SHORT[ts]}</span>`).join('')}<span class="slot ts-brug shared" style="font-size:10px;padding:1px 6px;margin-left:6px">gedeeld</span><span class="slot ts-brug ts-cap-err" style="font-size:10px;padding:1px 6px">te vol</span></div>`;
+}
+
+function openCelModal(dag,gid,t){
+  const g=state.groepen.find(x=>x.id===gid);
+  const a=getA(dag,gid,t);
+  const verplicht=getVerplicht(g);
+  const optioneel=state.regels.optioneel[g.groepType]||[];
+  const toegestaan=new Set([...verplicht,...optioneel]);
+
+  // Build option groups: verplicht, optioneel, extra (buiten regels), combos
+  function makeOpt(ts, label){
+    const tot=totOp(dag,t,ts);
+    const max=state.regels.capaciteit[ts]||99;
+    const pct=Math.min(100,Math.round(tot/max*100));
+    const full=tot+g.gymnasten>max;
+    const sel=a&&a.toestel===ts?'selected':'';
+    return `<option value="${ts}" ${sel} ${full?'style="color:#dc2626"':''}>${label||displayTs(ts)} — ${tot}/${max} (${pct}%)${full?' ⛔':''}</option>`;
+  }
+
+  const verplichtOpts=verplicht.map(ts=>makeOpt(ts)).join('');
+  const optionOpts=optioneel.filter(t=>!verplicht.includes(t)).map(ts=>makeOpt(ts)).join('');
+  const extraTs=TOESTELLEN.filter(ts=>!toegestaan.has(ts));
+  const extraOpts=extraTs.map(ts=>makeOpt(ts, displayTs(ts)+' ★')).join('');
+
+  const combosAvail=(state.regels.combos||[]).filter(c=>{
+    const totA=totOp(dag,t,c.a),totB=totOp(dag,t,c.b);
+    return totA+g.gymnasten<=(state.regels.capaciteit[c.a]||99)&&totB+g.gymnasten<=(state.regels.capaciteit[c.b]||99);
+  });
+  const comboOpts=combosAvail.length
+    ?`<optgroup label="── Combis ──">${combosAvail.map(c=>`<option value="COMBO:${c.a}+${c.b}" ${a&&a.toestel===`COMBO:${c.a}+${c.b}`?'selected':''}>${SHORT[c.a]||c.a}+${SHORT[c.b]||c.b}</option>`).join('')}</optgroup>`
+    :'';
+
+  const allOpts=
+    (verplichtOpts?`<optgroup label="── Verplicht ──">${verplichtOpts}</optgroup>`:'')
+    +(optionOpts?`<optgroup label="── Optioneel ──">${optionOpts}</optgroup>`:'')
+    +comboOpts
+    +(extraOpts?`<optgroup label="── Extra (buiten regels) ★ ──">${extraOpts}</optgroup>`:'');
+
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:380px">
+    <div class="modal-title">${esc(g.naam)} — ${dag} ${t}</div>
+    <label>Toestel</label>
+    <select id="cT" size="8" style="height:auto">${allOpts}</select>
+    <p style="font-size:11px;color:#888;margin-top:5px">★ = buiten de ingestelde regels voor deze groep. ⛔ = te vol.</p>
+    <label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer"><input type="checkbox" id="cOpw" ${a&&(a.isOpwarming)?'checked':''}> Opwarming</label>
+    <label style="display:flex;align-items:center;gap:6px;margin-top:4px;cursor:pointer"><input type="checkbox" id="cCool" ${a&&a.isCooldown?'checked':''}> Cooldown</label>
+    <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end">
+      ${a?`<button class="btn btn-danger btn-sm" onclick="setA('${dag}',${gid},'${t}',null);closeModal();renderRooster()">🗑 Verwijder</button>`:''}
+      <button class="btn" onclick="closeModal()">Annuleer</button>
+      <button class="btn btn-primary" onclick="setAModal('${dag}',${gid},'${t}',${a?a.isOpwarming:false})">Opslaan</button>
+    </div>
+  </div></div>`;
+}
+
+
+// ── VALIDATIE ──
+function renderValidatie(){
+  const probs=[],dek={};
+  state.groepen.forEach(g=>{
+    dek[g.id]=new Set();
+    g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek[g.id].add(x));}}));
+    getVerplicht(g).forEach(t=>{if(!dek[g.id].has(t))probs.push({e:'warn',txt:`<b>${esc(g.naam)}</b> heeft <b>${t}</b> nog niet gehad.`});});
+  });
+  DAGEN.forEach(d=>genTimes(d).forEach(t=>TOESTELLEN.forEach(ts=>{const tot=totOp(d,t,ts),max=state.regels.capaciteit[ts]||99;if(tot>max)probs.push({e:'err',txt:`${d} ${t}: <b>${ts}</b> heeft ${tot}/${max} gymn.`});})));
+  // Dup: same toestel 2x on same day
+  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>probs.push({e:'warn',txt:`<b>${esc(g.naam)}</b> heeft <b>${ts}</b> 2× op ${d}`}));}));
+
+  const ingevuld=Object.values(state.rooster).reduce((s,a)=>s+a.length,0);
+  const ec=probs.filter(p=>p.e==='err').length,wc=probs.filter(p=>p.e==='warn').length;
+  document.getElementById('validatieStats').innerHTML=`<div class="metric"><div class="metric-label">Capaciteitsfouten</div><div class="metric-value" style="color:#dc2626">${ec}</div></div><div class="metric"><div class="metric-label">Waarschuwingen</div><div class="metric-value" style="color:#d97706">${wc}</div></div><div class="metric"><div class="metric-label">Ingevulde slots</div><div class="metric-value">${ingevuld}</div></div>`;
+  const pEl=document.getElementById('probleemLijst'),tc=document.getElementById('probleemTeller');
+  if(!probs.length){pEl.innerHTML='<p style="color:#16a34a;font-size:13px;padding:.5rem 0">✅ Alles in orde!</p>';tc.style.display='none';}
+  else{tc.style.display='';tc.textContent=probs.length;pEl.innerHTML=probs.map(p=>`<div class="warn-item"><span style="flex-shrink:0">${p.e==='err'?'❌':'⚠️'}</span><span style="font-size:12px">${p.txt}</span></div>`).join('');}
+  document.getElementById('dekkingLijst').innerHTML=state.groepen.map(g=>{const v=getVerplicht(g);const gd=[...dek[g.id]].filter(t=>v.includes(t)).length;const pct=v.length?Math.round(gd/v.length*100):100;const col=pct===100?'#16a34a':pct>=60?'#d97706':'#dc2626';return`<div class="row"><span style="flex:1;font-size:12px;font-weight:500">${esc(g.naam)}</span><span style="font-size:11px;color:#888;min-width:35px;text-align:right">${gd}/${v.length}</span><div class="pbar"><div class="pbarf" style="width:${pct}%;background:${col}"></div></div></div>`;}).join('');
+}
+
+// ── CONFLICT RADAR ──
+
+function renderVrijToestellen(){
+  const dag=document.getElementById('dagSelect')?.value;
+  const panel=document.getElementById('vrijSlots');
+  if(!panel||!dag) return;
+  const times=genTimes(dag);
+  if(!times.length){panel.innerHTML='<span style="color:#bbb">geen data</span>';return;}
+
+  // Show vrije toestellen per tijdslot as a small grid
+  // Use the current visible time range
+  const vrij={};
+  TOESTELLEN.forEach(ts=>{
+    vrij[ts]=[];
+    times.forEach(t=>{
+      const tot=totOp(dag,t,ts);
+      const max=state.regels.capaciteit[ts]||99;
+      if(tot===0) vrij[ts].push({t,status:'vrij'});
+      else if(tot<max) vrij[ts].push({t,status:'deels'});
+    });
+  });
+
+  // Show as color-coded badges per toestel
+  const parent=document.getElementById('vrijPanel');
+  if(!parent) return;
+
+  // Replace the vrij panel with a mini overview table
+  parent.innerHTML=`<div style="width:100%;margin-top:2px">
+    <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Toestelbezetting — ${dag}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+    ${TOESTELLEN.map(ts=>{
+      const max=state.regels.capaciteit[ts]||99;
+      // Show slots used across the day
+      const usedSlots=times.filter(t=>totOp(dag,t,ts)>0).length;
+      const overSlots=times.filter(t=>totOp(dag,t,ts)>max).length;
+      const pct=times.length?Math.round(usedSlots/times.length*100):0;
+      const cls=TS_CLASS[ts]||'ts-tu';
+      const borderStyle=overSlots>0?'border:2px solid #dc2626':'border:1px solid #e0e0d8';
+      const maxNow=times.reduce((mx,t)=>Math.max(mx,totOp(dag,t,ts)),0);
+      return `<div style="padding:5px 10px;border-radius:8px;${borderStyle};min-width:80px;text-align:center" class="${cls}">
+        <div style="font-size:11px;font-weight:600">${SHORT[ts]}</div>
+        <div style="font-size:10px;opacity:.8">max ${maxNow}/${max} gymn.</div>
+        <div style="height:4px;background:rgba(0,0,0,.1);border-radius:2px;margin-top:3px;overflow:hidden">
+          <div style="height:100%;background:${overSlots>0?'#dc2626':'currentColor'};opacity:.6;width:${Math.min(100,pct)}%"></div>
+        </div>
+      </div>`;
+    }).join('')}
+    </div>
   </div>`;
-  if(w)w.innerHTML=ntwHtml;
-  if(dw){dw.innerHTML=ntwHtml;if(dcard2)dcard2.style.display='block';}
 }
 
-// ── OVERZICHT (home tab: trainingen + matches per dag) ──
-async function loadOverzicht(){
-  if(!currentKinderen.length||!userTrainingen.length) return;
-
-  // Haal alle matches op in één keer
-  const{data:sentReqs}=await sbClient.from('carpool_requests')
-    .select('naar_id,training_id,status,bericht, naar:naar_id(voornaam,gemeente,telefoon)')
-    .eq('van_id',currentProfile.id).in('status',['accepted','pending']);
-  const{data:recvReqs}=await sbClient.from('carpool_requests')
-    .select('van_id,training_id,status,bericht, van:van_id(voornaam,gemeente,telefoon)')
-    .eq('naar_id',currentProfile.id).in('status',['accepted','pending']);
-
-  const dagOrder=['maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag'];
-  const gesorteerd=[...userTrainingen].sort((a,b)=>dagOrder.indexOf(a.dag)-dagOrder.indexOf(b.dag));
-
-  const now=new Date();
-  const dagNr={'maandag':1,'dinsdag':2,'woensdag':3,'donderdag':4,'vrijdag':5,'zaterdag':6,'zondag':0};
-
-  const html=gesorteerd.map(t=>{
-    const k=currentKinderen.find(k=>k.groep_id===t.groep_id);
-    const kindLbl=k?.label||t.groepen?.naam||'?';
-
-    // Matches voor deze training
-    const mijnSent=(sentReqs||[]).filter(r=>r.training_id===t.id);
-    const mijnRecv=(recvReqs||[]).filter(r=>r.training_id===t.id);
-    const geaccepteerd=[
-      ...mijnSent.filter(r=>r.status==='accepted').map(r=>({naam:r.naar?.voornaam,gemeente:r.naar?.gemeente,tel:r.naar?.telefoon})),
-      ...mijnRecv.filter(r=>r.status==='accepted').map(r=>({naam:r.van?.voornaam,gemeente:r.van?.gemeente,tel:r.van?.telefoon}))
-    ];
-    const wachtend=[
-      ...mijnSent.filter(r=>r.status==='pending').map(r=>({naam:r.naar?.voornaam,richting:'uitgestuurd'})),
-      ...mijnRecv.filter(r=>r.status==='pending').map(r=>({naam:r.van?.voornaam,richting:'ontvangen'}))
-    ];
-
-    // Is dit de volgende training?
-    const tDag=dagNr[t.dag];
-    const [th,tm]=t.start_tijd.split(':').map(Number);
-    const diff=((tDag-now.getDay())+7)%7;
-    const isVandaag=diff===0;
-    const isVolgend=diff<3;
-
-    return`<div style="margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <div style="font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">${t.dag}</div>
-        <div style="font-size:0.88rem;font-weight:700;color:var(--blue)">${t.start_tijd}–${t.eind_tijd}</div>
-        <span class="badge b-red" style="font-size:0.68rem">${kindLbl}</span>
-        <div style="font-size:0.72rem;color:var(--muted)">${t.zalen?.naam||'?'}</div>
-        ${isVandaag?'<span class="badge" style="background:rgba(233,69,96,0.15);color:var(--accent)">Vanavond</span>':isVolgend?'<span class="badge b-muted">Binnenkort</span>':''}
-      </div>
-      ${geaccepteerd.length?geaccepteerd.map(m=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;margin-bottom:5px">
-          <span style="font-size:1rem">🚗</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:0.85rem;font-weight:600">${m.naam} <span style="color:var(--muted);font-weight:400">· ${m.gemeente}</span></div>
-            ${m.tel?`<button class="btn-copy" style="margin-top:3px" onclick="kopieerTel('${m.tel}')">📋 ${m.tel}</button>`:'<div style="color:var(--faint);font-size:0.75rem">Geen telefoonnummer</div>'}
-          </div>
-          <button onclick="openTerugritModal('${t.id}')" style="background:none;border:none;color:var(--faint);font-size:0.75rem;cursor:pointer;font-family:var(--font)">↩️ Terugrit</button>
-        </div>`).join(''):''}
-      ${wachtend.length?wachtend.map(w=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(76,201,240,0.06);border:1px solid rgba(76,201,240,0.15);border-radius:10px;margin-bottom:5px">
-          <span style="font-size:1rem">👤</span>
-          <div style="flex:1;font-size:0.82rem;color:var(--muted)">${w.naam} — ${w.richting==='ontvangen'?'<span style="color:var(--gold)">⏳ wil meerijden</span>':'<span style="color:var(--blue)">⏳ verzoek uitgestuurd</span>'}</div>
-          ${w.richting==='ontvangen'?`<div style="display:flex;gap:4px">
-            <button class="btn btn-success btn-sm" style="padding:3px 8px" onclick="accepteerVanuitOverzicht('${t.id}','${w.naam}')">✓</button>
-            <button class="btn btn-danger btn-sm" style="padding:3px 8px" onclick="afwijzenVanuitOverzicht('${t.id}','${w.naam}')">✗</button>
-          </div>`:''}
-        </div>`).join(''):''}
-      ${!geaccepteerd.length&&!wachtend.length?`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-radius:10px">
-          <span style="font-size:0.8rem;color:var(--faint)">Nog geen rijdgenoot</span>
-          <button class="btn btn-primary btn-sm" onclick="${!isDesktop()?"setScreen('matches');selectChip('"+t.id+"','mob-training-chips')":`switchDeskTab('matches');selectChip('${t.id}','desk-training-chips')`}">🚗 Zoek</button>
-        </div>`:''}
-    </div>`;
-  }).join('');
-
-  // Vul beide containers
-  const mob=document.getElementById('mob-overzicht-list');
-  const desk=document.getElementById('desk-overzicht-list');
-  if(mob)mob.innerHTML=html;
-  if(desk)desk.innerHTML=html;
+function renderConflictPanel(){
+  const panel=document.getElementById('conflictPanel');if(!panel)return;
+  const conflicts=[];
+  DAGEN.forEach(d=>genTimes(d).forEach(t=>TOESTELLEN.forEach(ts=>{const tot=totOp(d,t,ts),max=state.regels.capaciteit[ts]||99;if(tot>max)conflicts.push({e:'err',msg:`${d} ${t}: ${ts} heeft ${tot}/${max} gymn.`});})));
+  state.groepen.forEach(g=>DAGEN.forEach(d=>{if(!g.dagen.includes(d))return;const seen=new Set(),dups=new Set();genTimes(d).filter(t=>isActiveAtTime(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(!a)return;if(seen.has(a.toestel))dups.add(a.toestel);seen.add(a.toestel);});dups.forEach(ts=>conflicts.push({e:'dup',msg:`${g.naam}: ${ts} 2× op ${d}`}));}));
+  const missCount=state.groepen.filter(g=>{const dek=new Set();g.dagen.forEach(d=>genTimes(d).filter(t=>isActiveAtTime(g,t)).forEach(t=>{const a=getA(d,g.id,t);if(a&&!a.isOpwarming&&!a.isCooldown){const ts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];ts.forEach(x=>dek.add(x));}}));return getVerplicht(g).some(t=>!dek.has(t));}).length;
+  if(!conflicts.length&&!missCount){panel.innerHTML='<span style="color:#16a34a;font-size:12px">✅ Geen conflicten</span>';return;}
+  let html=conflicts.map(c=>`<div class="cr-item ${c.e==='err'?'cr-err':'cr-warn'}">${c.e==='err'?'❌':'⚠️'} ${c.msg}</div>`).join('');
+  if(missCount)html+=`<div class="cr-item cr-info">ℹ️ ${missCount} groep(en) missen nog verplichte toestellen — zie Validatie-tab</div>`;
+  panel.innerHTML=html;
 }
 
-// Helper: accepteer vanuit overzicht (lookup request id)
-async function accepteerVanuitOverzicht(trainingId,naam){
-  const{data}=await sbClient.from('carpool_requests').select('id,van:van_id(voornaam,telefoon)').eq('naar_id',currentProfile.id).eq('training_id',trainingId).eq('status','pending');
-  const r=data?.find(r=>r.van?.voornaam===naam);
-  if(r)respondRequest(r.id,'accepted',r.van?.telefoon||'');
-}
-async function afwijzenVanuitOverzicht(trainingId,naam){
-  const{data}=await sbClient.from('carpool_requests').select('id').eq('naar_id',currentProfile.id).eq('training_id',trainingId).eq('status','pending');
-  const r=data?.[0];if(r)openAfwijzenModal(r.id);
+// ── SOLVER ──
+function openSolverModal(){
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:540px">
+    <div class="modal-title">✨ Auto-solver</div>
+    <p style="font-size:13px;color:#444;margin-bottom:1rem">De solver vult het volledige rooster in op basis van alle ingestelde regels. Daarna kun je handmatig bijsturen.</p>
+    <div class="card" style="margin-bottom:1rem;background:#fffbeb;border-color:#fde68a"><p style="font-size:12px;color:#92400e">⚠️ <b>Let op:</b> het huidige rooster wordt overschreven. Sla eerst op als JSON als je de huidige versie wilt bewaren.</p></div>
+    <ul style="font-size:12px;color:#555;margin-left:1.25rem;line-height:1.9">
+      <li>Competitie krijgt voorrang boven recreatie</li>
+      <li>Elk verplicht toestel minstens 1× per week</li>
+      <li>Nooit hetzelfde toestel 2× op dezelfde dag</li>
+      <li>Verplichte toestellen gespreid over de week</li>
+      <li>TU + trampo altijd samen met vloer op dezelfde dag</li>
+      <li>Combis (bv. brug+rek) worden gebruikt als beide vrij zijn</li>
+      <li>Max blokduur zoals ingesteld in Regels</li>
+    </ul>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f0f0ee">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin:0"><input type="checkbox" id="solverKeepManual"> Bewaar handmatig ingevulde slots</label>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end"><button class="btn" onclick="closeModal()">Annuleer</button><button class="btn btn-primary" onclick="startSolver()">✨ Starten</button></div>
+  </div></div>`;
 }
 
-// ── MATCHES ──
-function loadMatchesForContext(){
-  if(isDesktop())loadMatches('desk-matches-list','desk-radius-slider',mapInstance,matchMarkers,radiusCircle,(c)=>{radiusCircle=c;});
-  else loadMatches('mob-matches-list','mob-radius-slider2',null,mobMatchMarkers,null,()=>{});
+function startSolver(){
+  const keep=document.getElementById('solverKeepManual')?.checked;
+  closeModal();
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg"><div class="modal" style="max-width:340px;text-align:center"><div style="font-size:36px;margin-bottom:.5rem">✨</div><div class="modal-title">Rooster berekenen…</div><p style="font-size:13px;color:#888">Even geduld.</p></div></div>`;
+  setTimeout(()=>{
+    const saved=keep?JSON.parse(JSON.stringify(state.rooster)):{};
+    const result=runSolver();
+    if(keep){DAGEN.forEach(d=>{const ex=saved[d]||[];const nw=(result.rooster[d]||[]).filter(r=>!ex.find(e=>e.groepId===r.groepId&&e.time===r.time));result.rooster[d]=[...ex,...nw];});}
+    state.rooster=result.rooster;
+    closeModal();
+    showSolverResult(result.log);
+    renderConflictPanel();
+  },300);
 }
-async function loadMatches(listId,sliderId,map,markers,circle,setCircle){
-  if(!selectedTrainingId){const el=document.getElementById(listId);if(el)el.innerHTML='<div style="color:var(--muted);font-size:0.85rem">Kies een training.</div>';return;}
-  const training=userTrainingen.find(t=>t.id===selectedTrainingId);if(!training)return;
-  const list=document.getElementById(listId);if(!list)return;
-  list.innerHTML='<div style="color:var(--muted)">Laden... <span class="spinner"></span></div>';
-  // Check flex-tijd toggle
-  const flexEl=document.getElementById(isDesktop()?'desk-flex-tijd':'mob-flex-tijd');
-  const flexTijd=flexEl?.checked||false;
-  let parQuery=sbClient.from('trainingen').select('groep_id,start_tijd').eq('dag',training.dag).eq('zaal_id',training.zaal_id);
-  if(!flexTijd){
-    parQuery=parQuery.eq('start_tijd',training.start_tijd);
+
+function showSolverResult(log){
+  const fails=log.filter(l=>l.type==='fail'),swaps=log.filter(l=>l.type==='swap');
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:500px">
+    <div class="modal-title">✅ Rooster berekend!</div>
+    <div class="grid3" style="margin-bottom:1rem">
+      <div class="metric"><div class="metric-label">Ingevulde slots</div><div class="metric-value">${Object.values(state.rooster).reduce((s,a)=>s+a.length,0)}</div></div>
+      <div class="metric"><div class="metric-label">Aanpassingen</div><div class="metric-value" style="color:#d97706">${swaps.length}</div></div>
+      <div class="metric"><div class="metric-label">Mislukt</div><div class="metric-value" style="color:#dc2626">${fails.length}</div></div>
+    </div>
+    ${fails.length?`<div style="margin-bottom:.75rem"><p style="font-size:12px;font-weight:600;color:#dc2626;margin-bottom:4px">Niet ingepland (${fails.length}):</p>${fails.slice(0,8).map(l=>`<div style="font-size:11px;color:#666;padding:2px 0">${l.msg}</div>`).join('')}${fails.length>8?`<div style="font-size:11px;color:#888">… en ${fails.length-8} meer</div>`:''}</div>`:''}
+    ${swaps.length?`<details style="font-size:12px"><summary style="cursor:pointer;color:#666">${swaps.length} automatische aanpassingen</summary><div style="margin-top:6px;max-height:150px;overflow-y:auto">${swaps.map(l=>`<div style="padding:2px 0;font-size:11px;color:#666">${l.msg}</div>`).join('')}</div></details>`:''}
+    <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end"><button class="btn" onclick="closeModal()">Sluiten</button><button class="btn btn-primary" onclick="closeModal();showTab('rooster')">Bekijk rooster</button></div>
+  </div></div>`;
+}
+
+// Opwarming toestellen — tellen NIET mee voor dekking
+const OPWARMING_TOESTELLEN = ['Vloer','Tumbling (TU)','Sprong','Trampoline','Balk','Herenbrug'];
+
+function runSolver(){
+  const log=[];
+  const newRooster={};
+
+  function slotsForGroup(g){
+    const step=isComp(g.groepType)?15:30;
+    const s=[];let[hh,mm]=g.start.split(':').map(Number);
+    const[eh,em]=g.eind.split(':').map(Number);
+    while(hh*60+mm<eh*60+em){
+      s.push(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
+      mm+=step;if(mm>=60){hh++;mm-=60;}
+    }
+    return s;
   }
-  const{data:allePar}=await parQuery;
-  // Filter op ± 30 min als flex aan staat
-  const [th,tm]=training.start_tijd.split(':').map(Number);
-  const trainMinuten=th*60+tm;
-  const par=(allePar||[]).filter(t=>{
-    if(!flexTijd)return true;
-    const[ph,pm]=t.start_tijd.split(':').map(Number);
-    return Math.abs((ph*60+pm)-trainMinuten)<=30;
+
+  function maxBlokSlots(g){
+    const mins=isComp(g.groepType)?(state.regels.maxBlokComp||60):(state.regels.maxBlokRecrea||30);
+    return Math.max(1,Math.round(mins/15)); // always 15min slots
+  }
+
+  // Count gymnasten on toestel at dag+time in newRooster
+  function countOn(dag,time,ts){
+    return(newRooster[dag]||[])
+      .filter(r=>r.time===time&&r.toestel===ts)
+      .reduce((s,r)=>{const g=state.groepen.find(x=>x.id===r.groepId);return s+(g?g.gymnasten:0);},0);
+  }
+  function hasCap(dag,time,ts,gymn){
+    return countOn(dag,time,ts)+gymn<=(state.regels.capaciteit[ts]||99);
+  }
+
+  // Base priority for a toestel given group type
+  function toestelPrio(g,ts){
+    const gt=g.groepType;
+    if(gt==='comp-tumbling'||gt==='recrea-tumbling'){const p={'Tumbling (TU)':10,'Trampoline':9,'Vloer':7,'Sprong':5};return p[ts]||1;}
+    if(gt==='comp-meisjes'){const p={'Vloer':10,'Brug':9,'Balk':9,'Sprong':6,'Trampoline':5,'Tumbling (TU)':4,'Rek':1,'Herenbrug':1,'Ringen':1,'Paard met bogen':1};return p[ts]||1;}
+    if(gt==='comp-jongens'||gt==='recrea-jongens'){const p={'Vloer':9,'Rek':9,'Herenbrug':8,'Ringen':7,'Paard met bogen':6,'Sprong':7,'Trampoline':5,'Tumbling (TU)':4,'Brug':3,'Balk':1};return p[ts]||1;}
+    const p={'Vloer':8,'Brug':7,'Balk':7,'Sprong':5,'Trampoline':4,'Tumbling (TU)':3,'Rek':2,'Herenbrug':2,'Ringen':1,'Paard met bogen':1};return p[ts]||1;
+  }
+
+  // How full is a toestel at a given time? Lower = prefer this toestel (spread load)
+  function capacityUsed(dag,time,ts){
+    const used=countOn(dag,time,ts);
+    const max=state.regels.capaciteit[ts]||99;
+    return used/max; // 0 = empty, 1 = full
+  }
+
+  // Pick best opwarming toestel
+  function pickOpwarming(g,dag,time){
+    const pref=isTumbling(g.groepType)
+      ?['Tumbling (TU)','Vloer','Trampoline','Sprong','Balk','Herenbrug']
+      :['Vloer','Sprong','Trampoline','Tumbling (TU)','Balk','Herenbrug'];
+    return pref.find(ts=>hasCap(dag,time,ts,g.gymnasten))||null;
+  }
+
+  // Build rotation plan: list of toestellen to use across workSlots
+  // NO combos — always use separate toestellen to maximize spread
+  // Each toestel appears as ONE block of max maxBlok slots
+  // Sort: comp first (by priority), then recrea
+  const sorted=[...state.groepen].sort((a,b)=>{
+    if(isComp(a.groepType)!==isComp(b.groepType))return isComp(a.groepType)?-1:1;
+    return a.prioriteit-b.prioriteit;
   });
-  const groepIds=[...new Set((par||[]).map(t=>t.groep_id))];
-  const{data:ak}=await sbClient.from('kinderen').select('ouder_id,groep_id').in('groep_id',groepIds).neq('ouder_id',currentUser.id);
-  const ouderIds=[...new Set((ak||[]).map(k=>k.ouder_id))];
-  markers.forEach(m=>m.remove());markers.length=0;
-  if(circle){circle.remove();}
-  if(!ouderIds.length){list.innerHTML='<div class="alert a-info">Geen andere ouders gevonden voor dit moment.</div>';return;}
-  const{data:ouders}=await sbClient.from('profiles').select('id,voornaam,gemeente,lat,lng,carpool_actief').in('id',ouderIds).eq('carpool_actief',true);
-  if(!ouders?.length){list.innerHTML='<div class="alert a-info">Geen beschikbare rijdgenoten.</div>';return;}
-  const slider=document.getElementById(sliderId);
-  const radius=slider?parseInt(slider.value)*1000:5000;
-  let newCircle=null;
-  if(actLat&&map){
-    newCircle=L.circle([actLat,actLng],{radius,color:'#e94560',fillColor:'#e94560',fillOpacity:0.07,weight:1.5}).addTo(map);
-    setCircle(newCircle);
-  }
-  const{data:mv}=await sbClient.from('carpool_requests').select('naar_id,status,bericht').eq('van_id',currentProfile.id).eq('training_id',selectedTrainingId);
-  const vz={};(mv||[]).forEach(v=>{vz[v.naar_id]=v.status;});
-  const acceptedIds=(mv||[]).filter(v=>v.status==='accepted').map(v=>v.naar_id);
-  const ac={};
-  if(acceptedIds.length){const{data:ct}=await sbClient.from('profiles').select('id,telefoon').in('id',acceptedIds);(ct||[]).forEach(c=>{ac[c.id]=c.telefoon||'';});}
-  const _actAdres=getActiefAdres();
-  const actLat=_actAdres?.lat||currentProfile?.lat||null;
-  const actLng=_actAdres?.lng||currentProfile?.lng||null;
-  const om=ouders.map(o=>({...o,dist:actLat&&o.lat?haversine(actLat,actLng,o.lat,o.lng):null})).sort((a,b)=>(a.dist??999)-(b.dist??999));
-  // Markers op kaart
-  if(map){
-    om.forEach(o=>{
-      if(!o.lat)return;
-      const status=vz[o.id];const inR=o.dist!==null&&o.dist<=radius/1000;
-      const isMatch=status==='accepted';
-      const emoji=isMatch?'🚗':'👤';
-      const bg=isMatch?'#22c55e':inR?'#4cc9f0':'#94a3b8';
-      const tel=isMatch&&ac[o.id]?`<br><b style="color:#22c55e">📞 ${ac[o.id]}</b>`:'';
-      const popup=`<div style="font-family:Outfit,sans-serif;min-width:120px"><b>${o.voornaam}</b><br><span style="color:#666;font-size:0.8em">📍 ${o.gemeente}</span>${o.dist!==null?`<br><span style="font-size:0.78em">${o.dist.toFixed(1)} km</span>`:''}${tel}</div>`;
-      // Kleine jitter zodat markers niet exact overlappen
-      const jitter=i=>((i*137.5)%1-0.5)*0.0004;
-      const idx=om.indexOf(o);
-      const jLat=o.lat+jitter(idx+1);
-      const jLng=o.lng+jitter(idx+3);
-      const icon=`<div style="background:${bg};border:2.5px solid white;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.35);cursor:pointer">${emoji}</div>`;
-      const m=L.marker([jLat,jLng],{icon:L.divIcon({html:icon,iconSize:[34,34],iconAnchor:[17,34],className:''})}).addTo(map).bindPopup(popup);
-      markers.push(m);
+
+  sorted.forEach(g=>{
+    const verplicht=[...getVerplicht(g)];
+    const optioneel=state.regels.optioneel[g.groepType]||[];
+    const toegestaan=[...new Set([...verplicht,...optioneel])];
+    const maxBlok=maxBlokSlots(g);
+    const prefBlok=isComp(g.groepType)?2:2; // preferred 30min blocks for both
+    const nDagen=g.dagen.length;
+    const verplichtSorted=[...verplicht].sort((a,b)=>toestelPrio(g,b)-toestelPrio(g,a));
+
+    g.dagen.forEach((dag,dagIndex)=>{
+      const allSlots=(()=>{
+        const s=[];let[hh,mm]=g.start.split(':').map(Number);
+        const[eh,em]=g.eind.split(':').map(Number);
+        while(hh*60+mm<eh*60+em){
+          s.push(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
+          mm+=15;if(mm>=60){hh++;mm-=60;}
+        }
+        return s;
+      })();
+
+      if(!allSlots.length) return;
+      if(!newRooster[dag]) newRooster[dag]=[];
+
+      // ── Opwarming: altijd 2 slots ──
+      const opwTs=pickOpwarming(g,dag,allSlots[0]);
+      const opwTs2=allSlots.length>1?pickOpwarming(g,dag,allSlots[1]):null;
+      newRooster[dag].push({groepId:g.id,time:allSlots[0],toestel:opwTs||'Vloer',isOpwarming:true});
+      if(allSlots.length>1){
+        newRooster[dag].push({groepId:g.id,time:allSlots[1],toestel:opwTs2||opwTs||'Vloer',isOpwarming:true});
+      }
+
+      // ── Cooldown: last slot (comp only) ──
+      const doCooldown=isComp(g.groepType)&&state.regels.cooldownComp!==false&&allSlots.length>4;
+      if(doCooldown){
+        const coolTs=pickOpwarming(g,dag,allSlots[allSlots.length-1])||opwTs||'Vloer';
+        newRooster[dag].push({groepId:g.id,time:allSlots[allSlots.length-1],toestel:coolTs,isCooldown:true});
+      }
+
+      const workSlots=doCooldown?allSlots.slice(2,-1):allSlots.slice(2);
+      if(!workSlots.length) return;
+
+      // ── Determine which verplicht toestellen to cover today ──
+      const doneThisWeek=new Set();
+      g.dagen.filter((_,i)=>i<dagIndex).forEach(d=>{
+        (newRooster[d]||[]).filter(r=>r.groepId===g.id&&!r.isOpwarming&&!r.isCooldown).forEach(r=>{
+          const parts=r.toestel.startsWith('COMBO:')?r.toestel.slice(6).split('+'):[r.toestel];
+          parts.forEach(x=>doneThisWeek.add(x));
+        });
+      });
+
+      let todayVerplicht;
+      if(isComp(g.groepType)){
+        const stillNeeded=verplichtSorted.filter(ts=>!doneThisWeek.has(ts));
+        const daysLeft=nDagen-dagIndex;
+        const isLastDay=dagIndex===nDagen-1;
+        const perDay=Math.max(2,Math.ceil(stillNeeded.length/daysLeft));
+        todayVerplicht=isLastDay?(stillNeeded.length?stillNeeded:verplichtSorted.slice(0,2)):stillNeeded.slice(0,perDay);
+        if(todayVerplicht.length<2){
+          verplichtSorted.forEach(ts=>{if(todayVerplicht.length<2&&!todayVerplicht.includes(ts))todayVerplicht.push(ts);});
+        }
+      } else {
+        const stillNeeded=verplichtSorted.filter(ts=>!doneThisWeek.has(ts));
+        const daysLeft=nDagen-dagIndex;
+        const isLastDay=dagIndex===nDagen-1;
+        todayVerplicht=isLastDay?stillNeeded:stillNeeded.filter((_,i)=>i%daysLeft===0);
+        if(!todayVerplicht.length) todayVerplicht=verplichtSorted.slice(0,1);
+      }
+
+      // Vloer+TU rule: non-TU groups can't have both as separate blocks
+      if(!isTumbling(g.groepType)&&todayVerplicht.includes('Vloer')&&todayVerplicht.includes('Tumbling (TU)')){
+        todayVerplicht=todayVerplicht.filter(t=>t!=='Tumbling (TU)');
+      }
+
+      // ── Slot-by-slot smart assignment ──
+      // Track what this group has used today and consecutive count
+      const usedToday=[]; // list of toestellen assigned so far this workday
+
+      // Score a toestel for a given time slot:
+      // Lower score = better choice
+      function scoreTs(ts, time, consecutiveCount){
+        if(!hasCap(dag,time,ts,g.gymnasten)) return 9999; // full
+        // Already used today and would exceed maxBlok?
+        if(consecutiveCount>=maxBlok) return 9999;
+        // Already used today (not consecutive): avoid repeats
+        const usedCount=usedToday.filter(x=>x===ts).length;
+        if(usedCount>0&&consecutiveCount===0) return 8000+usedCount; // repeat penalty
+
+        // How full is this toestel right now? (0=empty, 1=full)
+        const fillRatio=capacityUsed(dag,time,ts);
+        
+        // Is this toestel needed today?
+        const isNeeded=todayVerplicht.includes(ts)?0:1;
+        const isAllowed=toegestaan.includes(ts)?0:1;
+        if(isAllowed>0) return 9999;
+
+        // Prefer: needed > less used by others > higher group prio
+        return isNeeded*1000 + fillRatio*100 - toestelPrio(g,ts);
+      }
+
+      workSlots.forEach((time)=>{
+        // Consecutive count of last toestel
+        const lastTs=usedToday.length?usedToday[usedToday.length-1]:null;
+        let consec=0;
+        for(let i=usedToday.length-1;i>=0;i--){if(usedToday[i]===lastTs)consec++;else break;}
+
+        // If we're mid-block (consec < prefBlok) and still within maxBlok, continue same toestel
+        if(lastTs&&consec<prefBlok&&consec<maxBlok&&hasCap(dag,time,lastTs,g.gymnasten)){
+          // Stay on current toestel (building the block)
+          newRooster[dag].push({groepId:g.id,time,toestel:lastTs});
+          usedToday.push(lastTs);
+          return;
+        }
+
+        // Otherwise: pick next best toestel
+        // Must switch if we hit maxBlok, should switch if we hit prefBlok
+        const mustSwitch=lastTs&&consec>=maxBlok;
+        const shouldSwitch=lastTs&&consec>=prefBlok;
+
+        const candidates=toegestaan
+          .filter(ts=>!(mustSwitch||shouldSwitch)?true:ts!==lastTs) // avoid same if should switch
+          .map(ts=>({ts,score:scoreTs(ts,time,(ts===lastTs)?consec:0)}))
+          .filter(x=>x.score<9000)
+          .sort((a,b)=>a.score-b.score);
+
+        const chosen=candidates[0]?.ts;
+        if(chosen){
+          newRooster[dag].push({groepId:g.id,time,toestel:chosen});
+          usedToday.push(chosen);
+        } else {
+          log.push({type:'fail',msg:`${g.naam} ${dag} ${time}: geen toestel beschikbaar`});
+        }
+      });
     });
-  }
-  list.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-    <span style="font-size:0.72rem;color:var(--muted)"><span style="color:#22c55e">🚗</span> Match &nbsp;<span style="color:#4cc9f0">👤</span> Beschikbaar</span>
-    <button class="btn btn-secondary btn-sm" onclick="openMap()" style="margin-left:auto;display:${isDesktop()?'none':'inline-flex'}">🗺 Kaart</button>
-  </div>
-  ${om.map(o=>{
-    const status=vz[o.id];
-    const inR=o.dist!==null&&o.dist<=radius/1000;
-    const distStr=o.dist!==null?`${o.dist.toFixed(1)} km`:'?';
-    const tel=status==='accepted'?(ac[o.id]||''):'';
-    let action='';
-    if(status==='accepted'){
-      action=`<div class="m-actions">
-        <span class="badge b-green">✓ Match</span>
-        ${tel
-          ?`<button class="btn-copy" onclick="kopieerTel('${tel}')">📋 ${tel}</button>`
-          :`<button class="btn-tel-req" onclick="openBerichtModal('${o.id}','${selectedTrainingId}','tel')">📞 Vraag telefoonnummer</button>`}
-        <button onclick="openTerugritModal('${selectedTrainingId}')" style="background:none;border:none;color:var(--faint);font-size:0.72rem;font-family:var(--font);cursor:pointer;padding:0">↩️ Terugrit</button>
-      </div>`;
-    }else if(status==='pending'){
-      action=`<div class="m-actions">
-        <span class="badge b-blue">⏳ Wacht</span>
-        <button onclick="openTerugritModal('${selectedTrainingId}')" style="background:none;border:none;color:var(--faint);font-size:0.72rem;font-family:var(--font);cursor:pointer;padding:0">↩️ Terugrit</button>
-      </div>`;
-    }else if(status==='declined'){
-      action=`<span class="badge b-muted">✗ Afgewezen</span>`;
-    }else{
-      action=`<button class="btn btn-primary btn-sm" onclick="openBerichtModal('${o.id}','${selectedTrainingId}','verzoek')">Vraag 🚗</button>`;
-    }
-    return`<div class="m-row">
-      <div class="avatar">${o.voornaam[0]}</div>
-      <div class="m-info">
-        <div class="m-name">${o.voornaam}</div>
-        <div class="m-meta">📍 ${o.gemeente} · ${distStr}${inR?' · <span style="color:#22c55e">✓</span>':''}</div>
-      </div>
-      ${action}
-    </div>`;
-  }).join('')}`;
-}
-function renderMarkersOnMap(map,markers,circle,setCircle){
-  // Herteken markers op mobiele kaart
-  if(!map||!selectedTrainingId)return;
-  loadMatches('mob-matches-list','mob-radius-slider',map,markers,circle,setCircle);
-}
-
-// ── PENDING REQUESTS ──
-async function loadPendingRequests(){
-  const{data}=await sbClient.from('carpool_requests').select('*, van:van_id(voornaam,gemeente,telefoon), trainingen(dag,start_tijd,zalen(naam))').eq('naar_id',currentProfile.id).eq('status','pending').order('created_at',{ascending:false});
-  const ids=['pending-requests-card','desk-pending-card'];
-  const listIds=['pending-requests-list','desk-pending-list'];
-  const hasData=data?.length>0;
-  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=hasData?'block':'none';});
-  if(!hasData)return;
-  const html=data.map(r=>`<div class="m-row">
-    <div class="avatar">${r.van?.voornaam?.[0]||'?'}</div>
-    <div class="m-info">
-      <div class="m-name">${r.van?.voornaam} · ${r.van?.gemeente}</div>
-      <div class="m-meta">🗓 ${r.trainingen?.dag} ${r.trainingen?.start_tijd} · ${r.trainingen?.zalen?.naam}</div>
-      ${r.bericht?`<div style="font-size:0.78rem;color:var(--text);margin-top:4px;font-style:italic">"${r.bericht}"</div>`:''}
-    </div>
-    <div class="m-actions">
-      <button class="btn btn-success btn-sm" onclick="respondRequest('${r.id}','accepted','${r.van?.telefoon||''}')">✓</button>
-      <button class="btn btn-danger btn-sm" onclick="openAfwijzenModal('${r.id}')">✗</button>
-    </div>
-  </div>`).join('');
-  if(list)list.innerHTML=matchHtml;
-  if(dlist){dlist.innerHTML=matchHtml;if(dcard)dcard.style.display=alle.length?'block':'none';}
-  listIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
-  const nb=document.getElementById('nav-home');
-  if(nb&&!nb.querySelector('.notif-dot')){const d=document.createElement('span');d.className='notif-dot';nb.appendChild(d);}
-}
-async function respondRequest(requestId,status,telefoon){
-  await sbClient.from('carpool_requests').update({status,updated_at:new Date().toISOString()}).eq('id',requestId);
-  if(status==='accepted')showToast('✅ Geaccepteerd! Contactinfo zichtbaar.');
-  else showToast('Verzoek geweigerd');
-  document.querySelector('#nav-home .notif-dot')?.remove();
-  await loadPendingRequests();loadMatchesForContext();await loadMijnMatches();await loadOverzicht();
-}
-
-// ── MIJN MATCHES ──
-async function loadMijnMatches(){
-  const{data:s}=await sbClient.from('carpool_requests').select('*, naar:naar_id(voornaam,gemeente,telefoon), trainingen(dag,start_tijd,zalen(naam))').eq('van_id',currentProfile.id).eq('status','accepted');
-  const{data:r}=await sbClient.from('carpool_requests').select('*, van:van_id(voornaam,gemeente,telefoon), trainingen(dag,start_tijd,zalen(naam))').eq('naar_id',currentProfile.id).eq('status','accepted');
-  const alle=[...(s||[]).map(x=>({naam:x.naar?.voornaam,gemeente:x.naar?.gemeente,tel:x.naar?.telefoon,training:x.trainingen})),...(r||[]).map(x=>({naam:x.van?.voornaam,gemeente:x.van?.gemeente,tel:x.van?.telefoon,training:x.trainingen}))];
-  const card=document.getElementById('mijn-matches-card');const list=document.getElementById('mijn-matches-list');
-  if(!alle.length){if(card)card.style.display='none';return;}
-  if(card)card.style.display='block';
-  const matchHtml=alle.map(m=>`<div class="m-row">
-    <div class="avatar">${m.naam?.[0]||'?'}</div>
-    <div class="m-info">
-      <div class="m-name">${m.naam} · ${m.gemeente}</div>
-      <div class="m-meta">🗓 ${m.training?.dag||''} ${m.training?.start_tijd||''} · ${m.training?.zalen?.naam||''}</div>
-      ${m.tel
-        ?`<button class="btn-copy" style="margin-top:5px" onclick="kopieerTel('${m.tel}')">📋 ${m.tel}</button>`
-        :`<div style="color:var(--faint);font-size:0.75rem;margin-top:3px">Geen telefoonnummer opgegeven</div>`}
-    </div>
-  </div>`).join('');
-}
-
-// ── PROFIEL ──
-function renderProfiel(){
-  if(!currentProfile)return;const p=currentProfile;
-  const html=`<div class="card"><div class="card-label">Mijn gegevens</div>
-    <div style="display:grid;gap:8px;font-size:0.85rem">
-      <div><span style="color:var(--muted)">Naam</span><div style="font-weight:600;margin-top:2px">${p.voornaam} ${p.achternaam}</div></div>
-      <div><span style="color:var(--muted)">Adres</span><div style="margin-top:2px">${p.straat||''}${p.huisnummer?' '+p.huisnummer:''}, ${p.postcode||''} ${p.gemeente}</div></div>
-      <div><span style="color:var(--muted)">Telefoon</span><div style="margin-top:2px">${p.telefoon?`<button class="btn-copy" onclick="kopieerTel('${p.telefoon}')">📋 ${p.telefoon}</button>`:'<span style="color:var(--gold)">⚠️ Niet ingevuld</span>'}</div></div>
-
-      <div><span style="color:var(--muted)">Locatie</span><div style="margin-top:2px">${p.lat?'<span style="color:var(--green)">✅ Geocodeerd</span>':'<span style="color:var(--gold)">⚠️ Niet gevonden</span>'}</div></div>
-    </div></div>
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-label" style="margin:0">Mijn kinderen</div>
-      <button class="btn btn-primary btn-sm" onclick="openKindModal()">➕ Toevoegen</button>
-    </div>
-    ${!currentKinderen.length?'<div class="alert a-warn">Nog geen kinderen toegevoegd.</div>':
-      currentKinderen.map(k=>`<div class="m-row">
-        <div style="flex:1"><div style="font-weight:600;font-size:0.88rem">${k.label}</div><div style="margin-top:3px"><span class="badge b-red">${k.groepen?.naam||'?'}</span></div></div>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm" onclick="openKindModal('${k.id}')">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteKind('${k.id}')">🗑</button>
-        </div>
-      </div>`).join('')}
-  </div>
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-label" style="margin:0">📍 Mijn adressen</div>
-      <button class="btn btn-primary btn-sm" onclick="openAdresModal()">➕ Toevoegen</button>
-    </div>
-    <p style="font-size:0.75rem;color:var(--faint);margin-bottom:10px">Het actieve adres wordt gebruikt voor de matching.</p>
-    ${currentAdressen.map(a=>`
-      <div class="m-row" style="${a.actief?'background:rgba(34,197,94,0.06);border-radius:10px;padding:8px 10px;margin:-2px -2px 6px;':'padding:6px 0;'}">
-        <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-weight:600;font-size:0.88rem">${a.label}</span>
-            ${a.actief?'<span class="badge b-green" style="font-size:0.65rem">Actief</span>':''}
-          </div>
-          <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">${a.straat}${a.huisnummer?' '+a.huisnummer:''}, ${a.postcode||''} ${a.gemeente}</div>
-          ${!a.lat?'<div style="font-size:0.72rem;color:var(--gold)">⚠️ Niet geocodeerd</div>':''}
-        </div>
-        <div style="display:flex;gap:5px;flex-shrink:0">
-          ${!a.actief?`<button class="btn btn-success btn-sm" onclick="setActiefAdres('${a.id}')" title="Maak actief">✓</button>`:''}
-          <button class="btn btn-secondary btn-sm" onclick="openAdresModal('${a.id}')">✏️</button>
-          ${currentAdressen.length>1?`<button class="btn btn-danger btn-sm" onclick="deleteAdres('${a.id}')">🗑</button>`:''}
-        </div>
-      </div>`).join('')}
-  </div>
-  <div class="card"><div class="card-label">Carpool</div>
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:0.88rem">Beschikbaar als rijdgenoot</span>
-      <input type="checkbox" id="carpool-toggle" ${p.carpool_actief?'checked':''} onchange="toggleCarpool(this.checked)" style="width:auto;cursor:pointer;transform:scale(1.4)">
-    </div>
-  </div>
-  <button class="btn btn-secondary btn-full" onclick="logout()" style="margin-top:6px">Uitloggen</button>
-  <button class="btn btn-ghost btn-full" onclick="document.getElementById('config-screen').classList.add('active')" style="margin-top:4px;font-size:0.75rem">⚙️ Supabase instellingen</button>`;
-  document.getElementById('profiel-content').innerHTML=html;
-  document.getElementById('desk-profiel-content').innerHTML=html;
-}
-function openDeskProfiel(){renderProfiel();document.getElementById('desk-profiel-modal').classList.add('open');}
-function openDeskAdmin(){showAdminSection('codes','desk-admin-section');document.getElementById('desk-admin-modal').classList.add('open');}
-async function toggleCarpool(actief){await sbClient.from('profiles').update({carpool_actief:actief}).eq('id',currentProfile.id);currentProfile.carpool_actief=actief;showToast(actief?'✅ Beschikbaar':'Niet meer beschikbaar');}
-
-// ── MOBIEL NAVIGATIE ──
-function setScreen(name){
-  document.querySelectorAll('.screen.mob-only').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('screen-'+name)?.classList.add('active');
-  document.getElementById('nav-'+name)?.classList.add('active');
-  if(name==='profiel')renderProfiel();
-  if(name==='admin')showAdminSection('codes','admin-section');
-  if(name==='matches'&&!selectedTrainingId&&userTrainingen.length){selectedTrainingId=userTrainingen[0].id;renderChips('mob-training-chips');loadMatchesForContext();}
-}
-
-// ── KINDEREN ──
-async function openKindModal(kindId=null){
-  editingKindId=kindId;
-  const{data:gr}=await sbClient.from('groepen').select('*').order('naam');allGroepen=gr||[];
-  const sel=document.getElementById('kind-groep');
-  if(!allGroepen.length){showToast('⚠️ Admin moet eerst groepen aanmaken');return;}
-  sel.innerHTML=allGroepen.map(g=>`<option value="${g.id}">${g.naam}</option>`).join('');
-  if(kindId){const k=currentKinderen.find(k=>k.id===kindId);document.getElementById('kind-modal-title').textContent='Kind bewerken';document.getElementById('kind-label').value=k?.label||'';sel.value=k?.groep_id||'';}
-  else{document.getElementById('kind-modal-title').textContent='Kind toevoegen';document.getElementById('kind-label').value=`Kind ${currentKinderen.length+1}`;sel.value=allGroepen[0]?.id||'';}
-  document.getElementById('kind-modal').classList.add('open');
-}
-function closeKindModal(){document.getElementById('kind-modal').classList.remove('open');editingKindId=null;}
-async function saveKind(){
-  const label=document.getElementById('kind-label').value.trim(),groep_id=document.getElementById('kind-groep').value;
-  if(!label||!groep_id)return showToast('Vul alle velden in');
-  if(editingKindId){const{error}=await sbClient.from('kinderen').update({label,groep_id}).eq('id',editingKindId);if(error)return showToast('❌ '+error.message);}
-  else{const{error}=await sbClient.from('kinderen').insert({ouder_id:currentUser.id,label,groep_id});if(error)return showToast('❌ '+error.message);}
-  showToast('✅ Opgeslagen');closeKindModal();await loadProfile();renderProfiel();
-}
-async function deleteKind(id){if(!confirm('Kind verwijderen?'))return;await sbClient.from('kinderen').delete().eq('id',id);showToast('Verwijderd');await loadProfile();renderProfiel();}
-
-// ── ADRESSEN ──
-let currentAdressen=[];
-let editingAdresId=null;
-
-function openAdresModal(adresId=null){
-  editingAdresId=adresId;
-  if(adresId){
-    const a=currentAdressen.find(a=>a.id===adresId);
-    document.getElementById('adres-modal-title').textContent='Adres bewerken';
-    document.getElementById('adres-label').value=a?.label||'';
-    document.getElementById('adres-straat').value=a?.straat||'';
-    document.getElementById('adres-hnr').value=a?.huisnummer||'';
-    document.getElementById('adres-gem').value=a?.gemeente||'';
-    document.getElementById('adres-pc').value=a?.postcode||'';
-  }else{
-    document.getElementById('adres-modal-title').textContent='Adres toevoegen';
-    document.getElementById('adres-label').value='';
-    document.getElementById('adres-straat').value='';
-    document.getElementById('adres-hnr').value='';
-    document.getElementById('adres-gem').value='';
-    document.getElementById('adres-pc').value='';
-  }
-  document.getElementById('adres-modal').classList.add('open');
-}
-function closeAdresModal(){document.getElementById('adres-modal').classList.remove('open');editingAdresId=null;}
-
-async function saveAdres(){
-  const label=document.getElementById('adres-label').value.trim();
-  const straat=document.getElementById('adres-straat').value.trim();
-  const hnr=document.getElementById('adres-hnr').value.trim();
-  const gem=document.getElementById('adres-gem').value.trim();
-  const pc=document.getElementById('adres-pc').value.trim();
-  if(!label||!straat||!gem)return showToast('Vul label, straat en gemeente in');
-  let lat=null,lng=null;
-  try{
-    const adresTxt=`${straat}${hnr?' '+hnr:''}, ${pc} ${gem}, Belgium`;
-    const gd=await(await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(adresTxt)}&limit=1`)).json();
-    if(gd.length){lat=parseFloat(gd[0].lat);lng=parseFloat(gd[0].lon);}
-  }catch(e){}
-  if(editingAdresId){
-    const{error}=await sbClient.from('adressen').update({label,straat,huisnummer:hnr||null,gemeente:gem,postcode:pc||null,lat,lng}).eq('id',editingAdresId);
-    if(error)return showToast('❌ '+error.message);
-    showToast('✅ Adres bijgewerkt');
-  }else{
-    const{error}=await sbClient.from('adressen').insert({profiel_id:currentUser.id,label,straat,huisnummer:hnr||null,gemeente:gem,postcode:pc||null,lat,lng,actief:currentAdressen.length===0});
-    if(error)return showToast('❌ '+error.message);
-    showToast('✅ Adres toegevoegd');
-  }
-  closeAdresModal();
-  await loadAdressen();
-  renderProfiel();
-}
-
-async function loadAdressen(){
-  const{data}=await sbClient.from('adressen').select('*').eq('profiel_id',currentUser.id).order('created_at');
-  currentAdressen=data||[];
-  // Als geen adressen: maak er één aan vanuit het profiel
-  if(!currentAdressen.length&&currentProfile?.straat){
-    await sbClient.from('adressen').insert({
-      profiel_id:currentUser.id,label:'Thuis',
-      straat:currentProfile.straat,huisnummer:currentProfile.huisnummer||null,
-      gemeente:currentProfile.gemeente,postcode:currentProfile.postcode||null,
-      lat:currentProfile.lat,lng:currentProfile.lng,actief:true
-    });
-    const{data:d2}=await sbClient.from('adressen').select('*').eq('profiel_id',currentUser.id).order('created_at');
-    currentAdressen=d2||[];
-  }
-}
-
-async function setActiefAdres(adresId){
-  // Zet alle adressen inactief
-  await sbClient.from('adressen').update({actief:false}).eq('profiel_id',currentUser.id);
-  // Zet dit adres actief
-  await sbClient.from('adressen').update({actief:true}).eq('id',adresId);
-  await loadAdressen();
-  const a=currentAdressen.find(a=>a.id===adresId);
-  showToast(`📍 ${a?.label||'Adres'} actief`);
-  renderProfiel();
-  loadMatchesForContext();
-}
-
-async function deleteAdres(adresId){
-  const a=currentAdressen.find(a=>a.id===adresId);
-  if(a?.actief&&currentAdressen.length>1)return showToast('❌ Maak eerst een ander adres actief');
-  if(!confirm(`"${a?.label||'Adres'}" verwijderen?`))return;
-  await sbClient.from('adressen').delete().eq('id',adresId);
-  await loadAdressen();
-  renderProfiel();
-  showToast('Adres verwijderd');
-}
-
-function getActiefAdres(){
-  return currentAdressen.find(a=>a.actief)||currentAdressen[0]||null;
-}
-
-// ── BERICHT MODAL ──
-function openBerichtModal(naarId,trainingId,type='verzoek'){
-  berichtTarget=naarId;berichtTrainingId=trainingId;
-  const isTel=type==='tel';
-  document.getElementById('bericht-modal-title').textContent=isTel?'Vraag telefoonnummer':'Carpool verzoek sturen';
-  document.getElementById('bericht-tekst').placeholder=isTel?'Hoi, kun je je telefoonnummer met me delen?':'Hoi, ik rij vanuit Nazareth centrum en kan jouw kind meenemen...';
-  document.getElementById('bericht-tekst').value='';
-  document.getElementById('bericht-geen-tel-alert').style.display=(!currentProfile?.telefoon&&type!=='tel')?'block':'none';
-  document.getElementById('bericht-modal').classList.add('open');
-}
-function closeBerichtModal(){document.getElementById('bericht-modal').classList.remove('open');berichtTarget=null;berichtTrainingId=null;}
-async function submitBericht(){
-  if(!berichtTarget||!berichtTrainingId)return;
-  const bericht=document.getElementById('bericht-tekst').value.trim();
-  const{error}=await sbClient.from('carpool_requests').insert({van_id:currentProfile.id,naar_id:berichtTarget,training_id:berichtTrainingId,status:'pending',bericht:bericht||null});
-  if(error)return showToast('❌ '+error.message);
-  showToast('✅ Verzoek verzonden!');closeBerichtModal();loadMatchesForContext();
-}
-
-// ── AFWIJZEN MODAL ──
-function openAfwijzenModal(requestId){afwijzenRequestId=requestId;document.getElementById('afwijzen-tekst').value='';document.getElementById('afwijzen-modal').classList.add('open');}
-function closeAfwijzenModal(){document.getElementById('afwijzen-modal').classList.remove('open');afwijzenRequestId=null;}
-async function submitAfwijzen(){
-  if(!afwijzenRequestId)return;
-  const reden=document.getElementById('afwijzen-tekst').value.trim();
-  await sbClient.from('carpool_requests').update({status:'declined',updated_at:new Date().toISOString(),bericht:reden||null}).eq('id',afwijzenRequestId);
-  showToast('Verzoek afgewezen');closeAfwijzenModal();document.querySelector('#nav-home .notif-dot')?.remove();await loadPendingRequests();
-}
-
-// ── TERUGRIT ──
-async function openTerugritModal(trainingId){
-  document.getElementById('terugrit-modal').classList.add('open');
-  const list=document.getElementById('terugrit-matches-list');
-  list.innerHTML='<div style="color:var(--muted)">Laden... <span class="spinner"></span></div>';
-  const training=userTrainingen.find(t=>t.id===trainingId);if(!training){list.innerHTML='<div style="color:var(--muted)">Niet gevonden.</div>';return;}
-  // Check flex-tijd toggle
-  const flexEl=document.getElementById(isDesktop()?'desk-flex-tijd':'mob-flex-tijd');
-  const flexTijd=flexEl?.checked||false;
-  let parQuery=sbClient.from('trainingen').select('groep_id,start_tijd').eq('dag',training.dag).eq('zaal_id',training.zaal_id);
-  if(!flexTijd){
-    parQuery=parQuery.eq('start_tijd',training.start_tijd);
-  }
-  const{data:allePar}=await parQuery;
-  // Filter op ± 30 min als flex aan staat
-  const [th,tm]=training.start_tijd.split(':').map(Number);
-  const trainMinuten=th*60+tm;
-  const par=(allePar||[]).filter(t=>{
-    if(!flexTijd)return true;
-    const[ph,pm]=t.start_tijd.split(':').map(Number);
-    return Math.abs((ph*60+pm)-trainMinuten)<=30;
   });
-  const groepIds=[...new Set((par||[]).map(t=>t.groep_id))];
-  const{data:ak}=await sbClient.from('kinderen').select('ouder_id').in('groep_id',groepIds).neq('ouder_id',currentUser.id);
-  const ouderIds=[...new Set((ak||[]).map(k=>k.ouder_id))];
-  if(!ouderIds.length){list.innerHTML='<div class="alert a-info">Geen rijdgenoten voor de terugrit.</div>';return;}
-  const{data:ouders}=await sbClient.from('profiles').select('id,voornaam,gemeente,carpool_actief').in('id',ouderIds).eq('carpool_actief',true);
-  const tid=trainingId+'_terug';
-  const{data:mv}=await sbClient.from('carpool_requests').select('naar_id,status').eq('van_id',currentProfile.id).eq('training_id',tid);
-  const vz={};(mv||[]).forEach(v=>{vz[v.naar_id]=v.status;});
-  list.innerHTML=(ouders||[]).map(o=>{
-    const status=vz[o.id];
-    const btn=status==='accepted'?'<span class="badge b-green">✓ Match</span>':status==='pending'?'<span class="badge b-blue">⏳</span>':`<button class="btn btn-primary btn-sm" onclick="openBerichtModal('${o.id}','${tid}','verzoek')">Vraag ↩️</button>`;
-    return`<div class="m-row"><div class="avatar">${o.voornaam[0]}</div><div class="m-info"><div class="m-name">${o.voornaam}</div><div class="m-meta">📍 ${o.gemeente}</div></div><div>${btn}</div></div>`;
-  }).join('');
+  return{rooster:newRooster,log};
 }
 
-// ── TELEFOON ──
-function kopieerTel(tel){navigator.clipboard.writeText(tel).then(()=>showToast('📋 Gekopieerd: '+tel)).catch(()=>showToast('Tel: '+tel));}
-
-// ── SEIZOEN ──
-async function checkSeizoenBanner(){
-  try{
-    const{data:sz,error:se}=await sbClient.from('seizoenen').select('id').eq('actief',true).single();
-    if(se||!sz)return;
-    const{data:bv}=await sbClient.from('seizoen_bevestigingen').select('id').eq('profiel_id',currentProfile.id).eq('seizoen_id',sz.id).single();
-    if(!bv){
-      document.getElementById('seizoen-banner').style.display='block';
-      document.getElementById('desk-seizoen-banner').style.display='block';
-    }
-  }catch(e){}
-}
-function downloadSjabloon(e){e.preventDefault();const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet([['groep','dag','start','eind','zaal'],['G1','maandag','18:00','19:30','Sporthal Nazareth'],['A2','dinsdag','19:00','21:00','Topsporthal Gent']]);ws['!cols']=[{wch:10},{wch:12},{wch:8},{wch:8},{wch:25}];XLSX.utils.book_append_sheet(wb,ws,'Uurrooster');XLSX.writeFile(wb,'rijdmee-sjabloon.xlsx');}
-function previewSeizoen(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{const wb=XLSX.read(e.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});const h=(rows[0]||[]).map(x=>String(x).toLowerCase().trim());const miss=['groep','dag','start','eind','zaal'].filter(k=>!h.includes(k));if(miss.length){showToast('❌ Kolommen ontbreken: '+miss.join(', '));return;}const[gi,di,si,ei,zi]=['groep','dag','start','eind','zaal'].map(k=>h.indexOf(k));seizoenPreviewData=rows.slice(1).filter(r=>r[gi]).map(r=>({groep:String(r[gi]).trim(),dag:String(r[di]).toLowerCase().trim(),start:String(r[si]).trim(),eind:String(r[ei]).trim(),zaal:String(r[zi]).trim()}));if(!seizoenPreviewData.length){showToast('❌ Geen geldige rijen');return;}const pr=document.getElementById('seizoen-preview')||document.getElementById('seizoen-preview2');if(!pr)return;pr.innerHTML=`<div style="display:flex;gap:14px;margin-bottom:10px"><div><div style="color:var(--muted);font-size:0.7rem">Rijen</div><div style="font-size:1.2rem;font-weight:700;color:var(--blue)">${seizoenPreviewData.length}</div></div></div><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="importSeizoen()">✅ Importeren</button></div>`;pr.style.display='block';};reader.readAsArrayBuffer(file);}
-async function importSeizoen(){const naam=document.getElementById('seizoen-naam')?.value.trim()||document.getElementById('seizoen-naam2')?.value.trim();if(!naam)return showToast('Vul seizoensnaam in');if(!seizoenPreviewData.length)return showToast('Geen data');try{await sbClient.from('trainingen').update({active:false}).eq('active',true);const{data:sz,error:se}=await sbClient.from('seizoenen').insert({naam,actief:true}).select().single();if(se)throw new Error(se.message);await sbClient.from('seizoenen').update({actief:false}).neq('id',sz.id);const{data:bg}=await sbClient.from('groepen').select('id,naam');const{data:bz}=await sbClient.from('zalen').select('id,naam');const gm={};(bg||[]).forEach(g=>gm[g.naam.toLowerCase()]=g.id);const zm={};(bz||[]).forEach(z=>zm[z.naam.toLowerCase()]=z.id);for(const n of[...new Set(seizoenPreviewData.map(r=>r.groep))].filter(g=>!gm[g.toLowerCase()])){const{data:ng}=await sbClient.from('groepen').insert({naam:n}).select().single();if(ng)gm[n.toLowerCase()]=ng.id;}for(const n of[...new Set(seizoenPreviewData.map(r=>r.zaal))].filter(z=>!zm[z.toLowerCase()])){const{data:nz}=await sbClient.from('zalen').insert({naam:n}).select().single();if(nz)zm[n.toLowerCase()]=nz.id;}const slots=seizoenPreviewData.map(r=>({groep_id:gm[r.groep.toLowerCase()],zaal_id:zm[r.zaal.toLowerCase()],dag:r.dag,start_tijd:r.start,eind_tijd:r.eind,active:true})).filter(s=>s.groep_id&&s.zaal_id);const{error:te}=await sbClient.from('trainingen').insert(slots);if(te)throw new Error(te.message);showToast(`✅ ${slots.length} trainingen geïmporteerd!`);seizoenPreviewData=[];}catch(err){showToast('❌ '+err.message);}}
-
-// ── ADMIN ──
-function showAdminSection(name,sectionId){
-  const s=document.getElementById(sectionId);if(!s)return;
-  if(name==='codes')s.innerHTML=`<div class="card"><div class="card-label">Nieuwe code</div><div class="g2"><div class="form-group"><label>Code</label><input type="text" id="new-code" placeholder="GYMCLUB-2025" style="text-transform:uppercase"></div><div class="form-group"><label>Max gebruik</label><input type="number" id="new-code-max" value="50"></div></div><div class="form-group"><label>Vervaldatum (opt.)</label><input type="date" id="new-code-exp"></div><button class="btn btn-primary" onclick="createCode()">Aanmaken</button></div><div class="card"><div class="card-label">Codes</div><div id="codes-list">Laden...</div></div>`;
-  if(name==='groepen')s.innerHTML=`<div class="card"><div class="card-label">Nieuwe groep</div><div class="form-group"><label>Naam</label><input type="text" id="new-groep-naam" placeholder="G1, A2..."></div><button class="btn btn-primary" onclick="createGroep()">Aanmaken</button></div><div class="card"><div class="card-label">Groepen</div><div id="groepen-list">Laden...</div></div>`;
-  if(name==='zalen')s.innerHTML=`<div class="card"><div class="card-label">Nieuwe zaal</div><div class="form-group"><label>Naam</label><input type="text" id="new-zaal-naam" placeholder="Sporthal Nazareth"></div><div class="form-group"><label>Adres</label><input type="text" id="new-zaal-adres" placeholder="Sportlaan 1, 9810 Nazareth"></div><button class="btn btn-primary" onclick="createZaal()">Aanmaken</button></div><div class="card"><div class="card-label">Zalen</div><div id="zalen-list">Laden...</div></div>`;
-  if(name==='trainingen')s.innerHTML=`<div class="card"><div class="card-label">Nieuw slot</div><div class="g2"><div class="form-group"><label>Groep</label><select id="new-t-groep"><option value="">Laden...</option></select></div><div class="form-group"><label>Zaal</label><select id="new-t-zaal"><option value="">Laden...</option></select></div></div><div class="form-group"><label>Dag</label><select id="new-t-dag">${DAGEN.map(d=>`<option value="${d}">${d.charAt(0).toUpperCase()+d.slice(1)}</option>`).join('')}</select></div><div class="g2"><div class="form-group"><label>Start</label><input type="time" id="new-t-start" value="18:00"></div><div class="form-group"><label>Eind</label><input type="time" id="new-t-eind" value="20:00"></div></div><button class="btn btn-primary" onclick="createTraining()">Aanmaken</button></div><div class="card"><div class="card-label">Trainingen</div><div id="trainingen-admin-list">Laden...</div></div>`;
-  if(name==='seizoen')s.innerHTML=`<div class="card"><div class="card-label">🔄 Nieuw seizoen</div><div class="alert a-warn">⚠️ Archiveert alle huidige trainingen.</div><div class="form-group"><label>Seizoensnaam</label><input type="text" id="seizoen-naam" placeholder="2025-2026"></div><div class="form-group"><label>Excel bestand</label><input type="file" id="seizoen-file" accept=".xlsx,.xls" onchange="previewSeizoen(this)"></div><div id="seizoen-preview" style="display:none;margin-top:10px"></div><button class="btn btn-secondary btn-sm" onclick="downloadSjabloon(event)" style="margin-top:8px">📥 Sjabloon</button></div><div class="card"><div class="card-label">Seizoenen</div><div id="seizoenen-list">Laden...</div></div>`;
-  loadAdminSection(name);
-}
-async function loadAdminSection(name){
-  if(name==='codes'){const{data}=await sbClient.from('invite_codes').select('*').order('created_at',{ascending:false});const el=document.getElementById('codes-list');if(!el)return;el.innerHTML=data?.length?`<table class="admin-table"><thead><tr><th>Code</th><th>Gebruik</th><th>Vervalt</th></tr></thead><tbody>${data.map(c=>`<tr><td><code style="color:var(--accent)">${c.code}</code></td><td>${c.used_count}/${c.max_uses}</td><td>${c.expires_at?new Date(c.expires_at).toLocaleDateString('nl-BE'):'—'}</td></tr>`).join('')}</tbody></table>`:'Nog geen codes.';}
-  if(name==='groepen'){const{data}=await sbClient.from('groepen').select('*').order('naam');const el=document.getElementById('groepen-list');if(!el)return;el.innerHTML=data?.map(g=>`<div class="m-row"><span>${g.naam}</span><button class="btn btn-danger btn-sm" onclick="deleteGroep('${g.id}')">✕</button></div>`).join('')||'Geen.';const sel=document.getElementById('new-t-groep');if(sel&&data)sel.innerHTML=data.map(g=>`<option value="${g.id}">${g.naam}</option>`).join('');}
-  if(name==='zalen'){const{data}=await sbClient.from('zalen').select('*').order('naam');const el=document.getElementById('zalen-list');if(!el)return;el.innerHTML=data?.map(z=>`<div class="m-row"><div><div>${z.naam}</div><div style="color:var(--muted);font-size:0.75rem">${z.adres||''}</div></div></div>`).join('')||'Geen.';const sel=document.getElementById('new-t-zaal');if(sel&&data)sel.innerHTML=data.map(z=>`<option value="${z.id}">${z.naam}</option>`).join('');}
-  if(name==='trainingen'){
-    // Laad eerst groepen en zalen parallel, dan pas trainingen
-    const[{data:gr},{data:za},{data}]=await Promise.all([
-      sbClient.from('groepen').select('*').order('naam'),
-      sbClient.from('zalen').select('*').order('naam'),
-      sbClient.from('trainingen').select('*, groepen(naam), zalen(naam)').eq('active',true).order('dag')
-    ]);
-    const gSel=document.getElementById('new-t-groep');
-    const zSel=document.getElementById('new-t-zaal');
-    if(gSel&&gr) gSel.innerHTML=gr.length?gr.map(g=>`<option value="${g.id}">${g.naam}</option>`).join(''):'<option value="">Eerst groepen aanmaken</option>';
-    if(zSel&&za) zSel.innerHTML=za.length?za.map(z=>`<option value="${z.id}">${z.naam}</option>`).join(''):'<option value="">Eerst zalen aanmaken</option>';
-    const el=document.getElementById('trainingen-admin-list');if(!el)return;
-    el.innerHTML=data?.length?`<table class="admin-table"><thead><tr><th>Dag</th><th>Tijd</th><th>Zaal</th><th>Groep</th><th></th></tr></thead><tbody>${data.map(t=>`<tr><td>${t.dag}</td><td>${t.start_tijd}–${t.eind_tijd}</td><td>${t.zalen?.naam||'?'}</td><td>${t.groepen?.naam||'?'}</td><td><button class="btn btn-danger btn-sm" onclick="deleteTraining('${t.id}')">✕</button></td></tr>`).join('')}</tbody></table>`:'Geen.';
-  }
-  if(name==='seizoen'){
-    const{data}=await sbClient.from('seizoenen').select('*').order('created_at',{ascending:false});
-    const el=document.getElementById('seizoenen-list');if(!el)return;
-    el.innerHTML=data?.length?data.map(s=>`
-      <div class="m-row">
-        <div style="flex:1">
-          <div style="font-weight:500">${s.naam}</div>
-        </div>
-        ${s.actief?'<span class="badge b-green">Actief</span>':'<span class="badge b-muted">Archief</span>'}
-        ${!s.actief?`<button class="btn btn-danger btn-sm" onclick="verwijderSeizoen('${s.id}','${s.naam}')">🗑 Verwijder</button>`:''}
-      </div>`).join(''):'Geen.';
-  }
-}
-// ── SEIZOEN VERWIJDEREN ──
-async function verwijderSeizoen(seizoenId, naam){
-  if(!confirm(`Seizoen "${naam}" verwijderen?
-
-Dit verwijdert:
-• Alle trainingen van dit seizoen
-• Groepen die nergens anders aan gekoppeld zijn
-
-Zalen blijven altijd bewaard.`)) return;
-
-  try {
-    showToast('Bezig met verwijderen...');
-
-    // 1. Haal alle trainingen van dit seizoen op
-    // Seizoen heeft geen directe link naar trainingen — trainingen hebben geen seizoen_id
-    // We verwijderen alle inactive trainingen die groepen gebruiken die alleen in dit seizoen voorkwamen
-    // Simpeler: verwijder alle trainingen die 'active=false' zijn (gearchiveerd door deze import)
-    // EN vraag bevestiging welke groepen verwijderd mogen worden
-
-    // Haal groepen op die GEEN actieve trainingen hebben
-    const{data:alleGroepen}=await sbClient.from('groepen').select('id,naam');
-    const{data:actieveT}=await sbClient.from('trainingen').select('groep_id').eq('active',true);
-    const actieveGroepIds=new Set((actieveT||[]).map(t=>t.groep_id));
-
-    // Groepen zonder actieve trainingen = veilig te verwijderen
-    const legeGroepen=(alleGroepen||[]).filter(g=>!actieveGroepIds.has(g.id));
-
-    // Verwijder inactieve trainingen
-    const{error:tErr}=await sbClient.from('trainingen').delete().eq('active',false);
-    if(tErr) throw new Error('Trainingen: '+tErr.message);
-
-    // Verwijder lege groepen
-    for(const g of legeGroepen){
-      await sbClient.from('groepen').delete().eq('id',g.id);
-    }
-
-    showToast(`✅ Opgeruimd: inactieve trainingen + ${legeGroepen.length} ongebruikte groepen verwijderd`);
-    loadAdminSection('seizoen');
-    loadAdminSection('groepen');
-    loadAdminSection('trainingen');
-  } catch(err){
-    showToast('❌ '+err.message);
-  }
+// ── IMPORT / EXPORT ──
+function downloadExcelTemplate(){
+  if(!window.XLSX){alert('XLSX library niet geladen.');return;}
+  const wb=XLSX.utils.book_new();
+  const hdr=['Naam','Groepstype','Prioriteit','Aantal gymnasten','Start','Einde',...DAGEN];
+  const rows=[['Groepen importtemplate — Zaalverdeling Tool'],['Groepstype: comp-meisjes / comp-jongens / comp-tumbling / recrea-meisjes / recrea-jongens / recrea-tumbling'],[''],hdr,...OTV_GROEPEN.map(g=>[g.naam,g.groepType,isComp(g.groepType)?g.prioriteit:'',g.gymnasten,g.start,g.eind,...DAGEN.map(d=>g.dagen.includes(d)?1:'')])];
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:26},{wch:18},{wch:12},{wch:16},{wch:8},{wch:8},...DAGEN.map(()=>({wch:10}))];
+  XLSX.utils.book_append_sheet(wb,ws,'Groepen');XLSX.writeFile(wb,'groepen_template.xlsx');
 }
 
-// ── ZALEN SAMENVOEGEN ──
-async function mergeZalen(behoudId, verwijderId){
-  // Verplaats alle trainingen van verwijderId naar behoudId
-  await sbClient.from('trainingen').update({zaal_id:behoudId}).eq('zaal_id',verwijderId);
-  // Verwijder de duplicate zaal
-  await sbClient.from('zalen').delete().eq('id',verwijderId);
-  showToast('✅ Zalen samengevoegd');
-  loadAdminSection('zalen');
+function importExcelTemplate(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      let hr=-1;for(let i=0;i<rows.length;i++){if(String(rows[i][0]).toLowerCase()==='naam'){hr=i;break;}}
+      if(hr<0){alert('Kan de kolomkoppen niet vinden.');return;}
+      const hds=rows[hr].map(h=>String(h).trim().toLowerCase());
+      const iN=hds.indexOf('naam'),iT=hds.findIndex(h=>h.includes('type')),iP=hds.findIndex(h=>h.includes('prioriteit')),iG=hds.findIndex(h=>h.includes('aantal')),iS=hds.findIndex(h=>h==='start'),iE=hds.findIndex(h=>h==='einde'||h==='eind');
+      const iD=DAGEN.map(d=>hds.findIndex(h=>h===d.toLowerCase()));
+      const nG=[];let id=1;
+      for(let i=hr+1;i<rows.length;i++){
+        const r=rows[i];const naam=String(r[iN]||'').trim();if(!naam)continue;
+        const gt=GROEP_TYPES.find(x=>x.id===String(r[iT]||'').trim())?String(r[iT]).trim():'recrea-meisjes';
+        const prio=parseInt(r[iP])||0,gymn=parseInt(r[iG])||10;
+        const start=String(r[iS]||'17:00').trim(),eind=String(r[iE]||'19:00').trim();
+        const dagen=DAGEN.filter((_,di)=>iD[di]>=0&&(r[iD[di]]===1||r[iD[di]]==='1'));
+        nG.push({id:id++,naam,groepType:gt,prioriteit:isComp(gt)?prio:0,gymnasten:gymn,dagen:dagen.length?dagen:['Maandag'],start,eind});
+      }
+      if(!nG.length){alert('Geen geldige rijen gevonden.');return;}
+      if(confirm(`${nG.length} groepen gevonden. Huidige groepen vervangen?`)){
+        state.groepen=nG;state.rooster={};state.nextId=id;
+        document.getElementById('importStatus').innerHTML='<span style="color:#16a34a">✅ Groepen geladen!</span>';
+        showTab('groepen');
+      }
+    }catch(err){alert('Fout bij inlezen: '+err.message);}
+    e.target.value='';
+  };
+  reader.readAsBinaryString(file);
 }
 
-async function createCode(){const code=document.getElementById('new-code').value.trim().toUpperCase();const max=parseInt(document.getElementById('new-code-max').value)||50;const exp=document.getElementById('new-code-exp').value;if(!code)return showToast('Vul een code in');const{error}=await sbClient.from('invite_codes').insert({code,max_uses:max,expires_at:exp||null});if(error)return showToast('❌ '+error.message);showToast('✅ Code aangemaakt');document.getElementById('new-code').value='';loadAdminSection('codes');}
-async function createGroep(){const naam=document.getElementById('new-groep-naam').value.trim();if(!naam)return showToast('Vul een naam in');const{error}=await sbClient.from('groepen').insert({naam});if(error)return showToast('❌ '+error.message);showToast('✅ Aangemaakt');document.getElementById('new-groep-naam').value='';loadAdminSection('groepen');}
-async function deleteGroep(id){if(!confirm('Verwijderen?'))return;await sbClient.from('groepen').delete().eq('id',id);showToast('Verwijderd');loadAdminSection('groepen');}
-async function createZaal(){const naam=document.getElementById('new-zaal-naam').value.trim();const adres=document.getElementById('new-zaal-adres').value.trim();if(!naam)return showToast('Vul een naam in');let lat=null,lng=null;if(adres){try{const gd=await(await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(adres+', Belgium')}&limit=1`)).json();if(gd.length){lat=parseFloat(gd[0].lat);lng=parseFloat(gd[0].lon);}}catch(e){}}const{error}=await sbClient.from('zalen').insert({naam,adres,lat,lng});if(error)return showToast('❌ '+error.message);showToast('✅ Aangemaakt');document.getElementById('new-zaal-naam').value='';document.getElementById('new-zaal-adres').value='';loadAdminSection('zalen');}
-async function createTraining(){const groep_id=document.getElementById('new-t-groep').value,zaal_id=document.getElementById('new-t-zaal').value,dag=document.getElementById('new-t-dag').value,start_tijd=document.getElementById('new-t-start').value,eind_tijd=document.getElementById('new-t-eind').value;const{error}=await sbClient.from('trainingen').insert({groep_id,zaal_id,dag,start_tijd,eind_tijd});if(error)return showToast('❌ '+error.message);showToast('✅ Aangemaakt');loadAdminSection('trainingen');}
-async function deleteTraining(id){await sbClient.from('trainingen').update({active:false}).eq('id',id);showToast('Verwijderd');loadAdminSection('trainingen');}
+function exportJSON(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='zaalverdeling.json';a.click();}
+function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const loaded=JSON.parse(ev.target.result);if(loaded.regels&&!loaded.regels.optioneel)loaded.regels.optioneel=JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL));state=loaded;document.getElementById('importStatus').innerHTML='<span style="color:#16a34a">✅ Configuratie geladen!</span>';showTab('groepen');}catch{alert('Ongeldig JSON-bestand.');}e.target.value='';};r.readAsText(file);}
 
-// ── UTILS ──
-function haversine(lat1,lon1,lat2,lon2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-let toastTimer=null;
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3500);}
-init();
+function exportExcel(){
+  if(!window.XLSX){alert('XLSX library niet geladen.');return;}
+  const wb=XLSX.utils.book_new();
+  DAGEN.forEach(dag=>{
+    const gs=state.groepen.filter(g=>g.dagen.includes(dag)).sort((a,b)=>{if(isComp(a.groepType)!==isComp(b.groepType))return isComp(a.groepType)?-1:1;return a.prioriteit-b.prioriteit;});
+    const times=genTimes(dag);
+    const rows=[[dag.toUpperCase(),'Aantal gymnasten',...times]];
+    gs.forEach(g=>{const row=[`${g.naam} (${g.start}-${g.eind})`,g.gymnasten];times.forEach(t=>{if(!isActief(g,t))row.push('');else{const a=getA(dag,g.id,t);row.push(a?a.toestel:'');}});rows.push(row);});
+    rows.push([]);
+    TOESTELLEN.forEach(ts=>rows.push([`Gymn. op ${ts}`,'',...times.map(t=>totOp(dag,t,ts)||0)]));
+    const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:28},{wch:14},...times.map(()=>({wch:14}))];
+    XLSX.utils.book_append_sheet(wb,ws,dag.slice(0,31));
+  });
+  XLSX.writeFile(wb,'rooster.xlsx');
+  document.getElementById('exportStatus').innerHTML='<span style="color:#16a34a">✅ Rooster gedownload!</span>';
+}
+
+renderSchemas();
 </script>
 </body>
 </html>
