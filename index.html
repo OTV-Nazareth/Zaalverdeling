@@ -829,39 +829,116 @@ function importExcelTemplate(e){
       const wb=XLSX.read(ev.target.result,{type:"binary"});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+
+      // Find header row
       let hr=-1;
-      for(let i=0;i<rows.length;i++){const f=String(rows[i][0]).toLowerCase().trim();if(f==="groepsnaam"||f==="naam"){hr=i;break;}}
-      if(hr<0){alert("Kan kolomkoppen niet vinden.");return;}
+      for(let i=0;i<rows.length;i++){
+        const f=String(rows[i][0]).toLowerCase().trim();
+        if(f==="groepsnaam"||f==="naam"){hr=i;break;}
+      }
+      if(hr<0){alert("Kan kolomkoppen niet vinden. Zorg voor een rij met 'Groepsnaam'.");return;}
+
       const hds=rows[hr].map(x=>String(x).trim().toLowerCase());
       const col=k=>hds.findIndex(h=>h.includes(k));
       const iN=col("naam"),iZ=col("zaal"),iT=col("type"),iP=col("prioriteit"),iTr=col("trainer");
       const iD=col("dag"),iS=col("start"),iE=col("eind"),iG=col("aantal"),iC=col("gecombineerd"),iO=col("opmerking");
+
+      // Normalize dag: match case-insensitively to DAGEN
+      function normDag(val){
+        const v=String(val||"").trim();
+        return DAGEN.find(d=>d.toLowerCase()===v.toLowerCase())||null;
+      }
+
+      // Normalize time: "9:00" -> "09:00", handle Excel numeric times
+      function normTime(val){
+        if(!val&&val!==0) return null;
+        // Excel stores times as decimals (0.5 = 12:00)
+        if(typeof val==="number"){
+          const totalMin=Math.round(val*24*60);
+          const h=Math.floor(totalMin/60),m=totalMin%60;
+          return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
+        }
+        const s=String(val).trim();
+        // Match H:MM or HH:MM
+        const m=s.match(/^(\d{1,2}):(\d{2})$/);
+        if(m) return m[1].padStart(2,"0")+":"+m[2];
+        return s||null;
+      }
+
       const map={};
       for(let i=hr+1;i<rows.length;i++){
-        const r=rows[i];const naam=String(r[iN]||"").trim();if(!naam)continue;
+        const r=rows[i];
+        const naam=String(r[iN]||"").trim();
+        if(!naam) continue;
+
+        const dag=normDag(iD>=0?r[iD]:"");
+        if(!dag) continue; // skip rows with invalid/empty dag
+
         if(!map[naam]){
-          const gt=GROEP_TYPES.find(x=>x.id===String(r[iT]||"").trim())&&String(r[iT]).trim()||"recrea-meisjes";
-          map[naam]={naam,zaal:iZ>=0?String(r[iZ]||""):"",groepType:gt,prioriteit:parseInt(r[iP])||0,trainer:iTr>=0?String(r[iTr]||""):"",gymnasten:parseInt(r[iG])||10,gecombineerdMet:iC>=0?String(r[iC]||""):"",opmerking:iO>=0?String(r[iO]||""):"",dagen:[],dagTijden:{},start:"17:00",eind:"19:00",_first:true};
+          const gt=GROEP_TYPES.find(x=>x.id===String(r[iT]||"").trim())
+            ?String(r[iT]).trim()
+            :"recrea-meisjes";
+          map[naam]={
+            naam,
+            zaal: iZ>=0?String(r[iZ]||"").trim():"",
+            groepType: gt,
+            prioriteit: parseInt(r[iP])||0,
+            trainer: iTr>=0?String(r[iTr]||"").trim():"",
+            gymnasten: parseInt(r[iG])||10,
+            gecombineerdMet: iC>=0?String(r[iC]||"").trim():"",
+            opmerking: iO>=0?String(r[iO]||"").trim():"",
+            dagen:[],
+            dagTijden:{},
+            start:"17:00",
+            eind:"19:00",
+            _first:true
+          };
         }
-        const dag=String(r[iD]||"").trim();if(!DAGEN.includes(dag))continue;
-        const start=String(r[iS]||"17:00").trim()||"17:00";
-        const eind=String(r[iE]||"19:00").trim()||"19:00";
-        if(!map[naam].dagen.includes(dag))map[naam].dagen.push(dag);
-        if(map[naam]._first){map[naam].start=start;map[naam].eind=eind;map[naam]._first=false;}
-        else if(start!==map[naam].start||eind!==map[naam].eind) map[naam].dagTijden[dag]={start,eind};
+
+        const gymn=parseInt(r[iG])||map[naam].gymnasten;
+        const start=normTime(iS>=0?r[iS]:null)||"17:00";
+        const eind=normTime(iE>=0?r[iE]:null)||"19:00";
+
+        if(!map[naam].dagen.includes(dag)) map[naam].dagen.push(dag);
+
+        if(map[naam]._first){
+          map[naam].start=start;
+          map[naam].eind=eind;
+          map[naam].gymnasten=gymn;
+          map[naam]._first=false;
+        } else if(start!==map[naam].start||eind!==map[naam].eind||gymn!==map[naam].gymnasten){
+          map[naam].dagTijden[dag]={start,eind};
+          if(gymn!==map[naam].gymnasten){
+            if(!map[naam].dagGymnsten) map[naam].dagGymnsten={};
+            map[naam].dagGymnsten[dag]=gymn;
+          }
+        }
       }
-      const nG=Object.values(map).filter(g=>g.dagen.length).map((g,i)=>{delete g._first;return {...g,id:i+1};});
-      if(!nG.length){alert("Geen geldige rijen gevonden.");return;}
-      if(confirm(nG.length+" groepen gevonden. Huidige groepen vervangen?")){
-        state.groepen=nG;state.rooster={};state.nextId=nG.length+1;
-        document.getElementById("importStatus").innerHTML="Groepen geladen!";
+
+      const nG=Object.values(map)
+        .filter(g=>g.dagen.length)
+        .map((g,i)=>{delete g._first;return{...g,id:i+1};});
+
+      if(!nG.length){alert("Geen geldige rijen gevonden. Controleer de Dag-kolom (bv. Maandag, Dinsdag...).");return;}
+
+      const totalDagRijen=nG.reduce((s,g)=>s+g.dagen.length,0);
+      if(confirm(nG.length+" groepen gevonden ("+totalDagRijen+" trainingsdag-rijen). Huidige groepen vervangen?")){
+        state.groepen=nG;
+        state.rooster={};
+        state.nextId=nG.length+1;
+        const statusEl=document.getElementById("importStatus");
+        if(statusEl) statusEl.innerHTML="<span style=\"color:#16a34a\">Geladen: "+nG.length+" groepen</span>";
         showTab("groepen");
       }
-    }catch(err){alert("Fout bij inlezen: "+err.message);console.error(err);}
+    }catch(err){
+      alert("Fout bij inlezen: "+err.message);
+      console.error(err);
+    }
     e.target.value="";
   };
   reader.readAsBinaryString(file);
 }
+
 
 
 function exportJSON(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='zaalverdeling.json';a.click();}
