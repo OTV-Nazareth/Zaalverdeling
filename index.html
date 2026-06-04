@@ -260,6 +260,14 @@ function isComp(t){return t&&t.startsWith('comp');}
 function isTumbling(t){return t&&t.includes('tumbling');}
 
 // Default verplichte toestellen per type
+const DEFAULT_OPTIONEEL = {
+  'comp-meisjes':   ['Tumbling (TU)','Trampoline'],
+  'comp-jongens':   ['Ringen','Paard met bogen','Trampoline','Tumbling (TU)'],
+  'comp-tumbling':  ['Balk','Sprong'],
+  'recrea-meisjes': ['Sprong','Trampoline','Tumbling (TU)'],
+  'recrea-jongens': ['Paard met bogen','Ringen','Trampoline','Tumbling (TU)'],
+  'recrea-tumbling':['Vloer','Sprong'],
+};
 const DEFAULT_VERPLICHT = {
   'comp-meisjes':   ['Vloer','Brug','Balk','Sprong'],
   'comp-jongens':   ['Vloer','Rek','Herenbrug','Sprong'],
@@ -280,6 +288,7 @@ let state = {
   regels: {
     capaciteit: {'Vloer':40,'Brug':12,'Rek':12,'Balk':15,'Sprong':10,'Trampoline':10,'Tumbling (TU)':20,'Herenbrug':8,'Ringen':6,'Paard met bogen':6},
     verplicht: JSON.parse(JSON.stringify(DEFAULT_VERPLICHT)),
+    optioneel: JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL)),
     combos: JSON.parse(JSON.stringify(DEFAULT_COMBOS)),
     maxBlokComp: 60,
     maxBlokRecrea: 30,
@@ -480,25 +489,45 @@ function saveGroep(id){
 
 
 // ── REGELS ──
+function cycleV(type,ts){
+  if(!state.regels.verplicht[type])state.regels.verplicht[type]=[];
+  if(!state.regels.optioneel)state.regels.optioneel=JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL));
+  if(!state.regels.optioneel[type])state.regels.optioneel[type]=[];
+  const isV=state.regels.verplicht[type].includes(ts),isO=state.regels.optioneel[type].includes(ts);
+  if(isV){state.regels.verplicht[type]=state.regels.verplicht[type].filter(x=>x!==ts);state.regels.optioneel[type].push(ts);}
+  else if(isO){state.regels.optioneel[type]=state.regels.optioneel[type].filter(x=>x!==ts);}
+  else{state.regels.verplicht[type].push(ts);}
+  renderRegels();
+}
+
 function renderRegels(){
   // Capaciteit
   document.getElementById('capaciteitForm').innerHTML=TOESTELLEN.map(t=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">${t}</span><input type="number" min="1" style="width:65px" value="${state.regels.capaciteit[t]||20}" onchange="state.regels.capaciteit['${t}']=parseInt(this.value)||20"><span style="font-size:11px;color:#888">gymn.</span></div>`).join('');
 
   // Max blok
   document.getElementById('maxBlokUI').innerHTML=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0ee"><div class="section-title">Max. blokduur per toestel</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">Competitie</span><select onchange="state.regels.maxBlokComp=parseInt(this.value)" style="width:120px"><option value="2" ${state.regels.maxBlokComp===2?'selected':''}>Max 1 uur</option><option value="3" ${state.regels.maxBlokComp===3?'selected':''}>Max 1,5 uur</option><option value="4" ${state.regels.maxBlokComp===4?'selected':''}>Max 2 uur</option></select></div>
-    <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:12px">Recreatie</span><select onchange="state.regels.maxBlokRecrea=parseInt(this.value)" style="width:120px"><option value="1" ${state.regels.maxBlokRecrea===1?'selected':''}>Max 30 min</option><option value="2" ${state.regels.maxBlokRecrea===2?'selected':''}>Max 1 uur</option></select></div></div>`;
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">Competitie (15 min slots)</span><select onchange="state.regels.maxBlokComp=parseInt(this.value)" style="width:150px"><option value="45" ${(state.regels.maxBlokComp||60)===45?'selected':''}>Max 45 min</option><option value="60" ${(state.regels.maxBlokComp||60)===60?'selected':''}>Max 1 uur</option><option value="90" ${(state.regels.maxBlokComp||60)===90?'selected':''}>Max 1,5 uur</option></select></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:12px">Recreatie (15 min slots)</span><select onchange="state.regels.maxBlokRecrea=parseInt(this.value)" style="width:150px"><option value="30" ${(state.regels.maxBlokRecrea||30)===30?'selected':''}>Max 30 min</option><option value="60" ${(state.regels.maxBlokRecrea||30)===60?'selected':''}>Max 1 uur</option></select></div>
+    <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:12px">Cooldown comp (15 min)</span><select onchange="state.regels.cooldownComp=this.value==='1'" style="width:150px"><option value="1" ${state.regels.cooldownComp!==false?'selected':''}>Ja</option><option value="0" ${state.regels.cooldownComp===false?'selected':''}>Nee</option></select></div></div>`;
 
   // Combos
   document.getElementById('combosForm').innerHTML=(state.regels.combos||[]).map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span class="combo-badge">⟷</span><span style="font-size:12px;flex:1">${c.label}</span><button class="btn btn-sm btn-danger" onclick="removeCombo(${i})">🗑</button></div>`).join('')+`<button class="btn btn-sm" onclick="addCombo()" style="margin-top:4px">+ Combinatie toevoegen</button>`;
 
-  // Verplicht per type
-  let vhtml='';
+  // Verplicht / optioneel / niet — 3-state knoppen
+  if(!state.regels.optioneel) state.regels.optioneel=JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL));
+  let vhtml='<p style="font-size:11px;color:#888;margin-bottom:10px">Klik om te wisselen: <b style="color:#1e40af">blauw</b> = verplicht · <b style="color:#92400e">geel</b> = optioneel · grijs = niet</p>';
   GROEP_TYPES.forEach(t=>{
     const v=state.regels.verplicht[t.id]||[];
-    vhtml+=`<div style="margin-bottom:12px"><p style="font-size:11px;font-weight:600;color:#444;margin-bottom:4px">${t.label}</p>`;
-    vhtml+=TOESTELLEN.map(ts=>`<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-size:12px;color:#1a1a1a;cursor:pointer"><input type="checkbox" ${v.includes(ts)?'checked':''} onchange="toggleV('${t.id}','${ts}',this.checked)"> ${SHORT[ts]}</label>`).join('');
-    vhtml+='</div>';
+    const o=(state.regels.optioneel||{})[t.id]||[];
+    vhtml+=`<div style="margin-bottom:14px"><p style="font-size:11px;font-weight:600;color:#444;margin-bottom:6px">${t.label}</p><div style="display:flex;flex-wrap:wrap;gap:5px">`;
+    vhtml+=TOESTELLEN.map(ts=>{
+      const isV=v.includes(ts),isO=o.includes(ts);
+      const s=isV?'v':isO?'o':'n';
+      const styles={'v':'background:#dbeafe;color:#1e40af;border:1px solid #93c5fd','o':'background:#fef3c7;color:#92400e;border:1px solid #fcd34d','n':'background:#f5f5f0;color:#888;border:1px solid #e5e7eb'};
+      const tips={'v':'verplicht','o':'optioneel','n':'niet gebruiken'};
+      return `<button onclick="cycleV('${t.id}','${ts}')" title="${tips[s]}" style="padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;${styles[s]}">${SHORT[ts]}</button>`;
+    }).join('');
+    vhtml+='</div></div>';
   });
   document.getElementById('verplichtForm').innerHTML=vhtml;
 
@@ -707,90 +736,167 @@ function showSolverResult(log){
 function runSolver(){
   const log=[];
   const newRooster={};
-  const tM2=t=>{const[h,m]=t.split(':').map(Number);return h*60+m;};
-  function groupSlots(g,dag){const s=[];let[h,m]=g.start.split(':').map(Number);const[eh,em]=g.eind.split(':').map(Number);while(h*60+m<eh*60+em){s.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);m+=30;if(m>=60){h++;m-=60;}}return s;}
-  function countOn(dag,time,ts){return(newRooster[dag]||[]).filter(r=>r.time===time&&r.toestel===ts).reduce((s,r)=>{const g=state.groepen.find(x=>x.id===r.groepId);return s+(g?g.gymnasten:0);},0);}
-  function hasCap(dag,time,ts,gymn){return countOn(dag,time,ts)+(gymn)<=(state.regels.capaciteit[ts]||99);}
+
+  function slotsForDag(g,dag){
+    const{start,eind}=getGroepTijd(g,dag);
+    const s=[];let[hh,mm]=start.split(':').map(Number);
+    const[eh,em]=eind.split(':').map(Number);
+    while(hh*60+mm<eh*60+em){
+      s.push(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
+      mm+=15;if(mm>=60){hh++;mm-=60;}
+    }
+    return s;
+  }
+
+  function maxBlokSlots(g){
+    const mins=isComp(g.groepType)?(state.regels.maxBlokComp||60):(state.regels.maxBlokRecrea||30);
+    return Math.max(1,Math.round(mins/15));
+  }
+
+  function countOn(dag,time,ts){
+    return(newRooster[dag]||[])
+      .filter(r=>r.time===time&&r.toestel===ts)
+      .reduce((s,r)=>{const g=state.groepen.find(x=>x.id===r.groepId);return s+(g?g.gymnasten:0);},0);
+  }
+  function hasCap(dag,time,ts,gymn){
+    return countOn(dag,time,ts)+gymn<=(state.regels.capaciteit[ts]||99);
+  }
+  function capacityUsed(dag,time,ts){
+    return countOn(dag,time,ts)/(state.regels.capaciteit[ts]||99);
+  }
 
   function toestelPrio(g,ts){
     const gt=g.groepType;
-    if(gt==='comp-tumbling'||gt==='recrea-tumbling'){const p={'Tumbling (TU)':10,'Trampoline':9,'Vloer':7};return p[ts]||1;}
-    if(gt==='comp-meisjes'){const p={'Vloer':10,'Brug':10,'Balk':9,'Sprong':6,'Trampoline':5,'Tumbling (TU)':4,'Rek':1,'Herenbrug':1,'Ringen':1,'Paard met bogen':1};return p[ts]||1;}
+    if(gt==='comp-tumbling'||gt==='recrea-tumbling'){const p={'Tumbling (TU)':10,'Trampoline':9,'Vloer':7,'Sprong':5};return p[ts]||1;}
+    if(gt==='comp-meisjes'){const p={'Vloer':10,'Brug':9,'Balk':9,'Sprong':6,'Trampoline':5,'Tumbling (TU)':4,'Rek':1,'Herenbrug':1,'Ringen':1,'Paard met bogen':1};return p[ts]||1;}
     if(gt==='comp-jongens'||gt==='recrea-jongens'){const p={'Vloer':9,'Rek':9,'Herenbrug':8,'Ringen':7,'Paard met bogen':6,'Sprong':7,'Trampoline':5,'Tumbling (TU)':4,'Brug':3,'Balk':1};return p[ts]||1;}
-    // recrea meisjes
     const p={'Vloer':8,'Brug':7,'Balk':7,'Sprong':5,'Trampoline':4,'Tumbling (TU)':3,'Rek':2,'Herenbrug':2,'Ringen':1,'Paard met bogen':1};return p[ts]||1;
   }
 
-  // Try to use a combo if both toestellen are free
-  function bestCombo(g,dag,time){
-    for(const c of (state.regels.combos||[])){
-      if(hasCap(dag,time,c.a,g.gymnasten)&&hasCap(dag,time,c.b,g.gymnasten)){
-        const pA=toestelPrio(g,c.a),pB=toestelPrio(g,c.b);
-        if(pA+pB>=10) return `COMBO:${c.a}+${c.b}`;
-      }
-    }
-    return null;
+  function pickOpwarming(g,dag,time){
+    const pref=isTumbling(g.groepType)
+      ?['Tumbling (TU)','Vloer','Trampoline','Sprong','Balk','Herenbrug']
+      :['Vloer','Sprong','Trampoline','Tumbling (TU)','Balk','Herenbrug'];
+    return pref.find(ts=>hasCap(dag,time,ts,g.gymnasten))||null;
   }
 
-  const sorted=[...state.groepen].sort((a,b)=>{if(isComp(a.groepType)!==isComp(b.groepType))return isComp(a.groepType)?-1:1;return a.prioriteit-b.prioriteit;});
+  // Build rotation: NO combos, prefBlok=2 slots (30min), max=maxBlok
+  function buildRotation(nSlots, maxBlok, todayVerplicht, optioneel){
+    const prefBlok=2;
+    const blockSize=Math.min(maxBlok,prefBlok);
+    const plan=[];
+    let used=0;
+    // verplicht first, then optioneel — no combos ever
+    const allTs=[...todayVerplicht,...optioneel.filter(t=>!todayVerplicht.includes(t))];
+    for(const ts of allTs){
+      if(used>=nSlots) break;
+      const cnt=Math.min(blockSize,nSlots-used);
+      plan.push({ts,count:cnt});
+      used+=cnt;
+    }
+    // extend last up to maxBlok if still short
+    if(used<nSlots&&plan.length){
+      const last=plan[plan.length-1];
+      const add=Math.min(maxBlok-last.count,nSlots-used);
+      if(add>0){last.count+=add;used+=add;}
+    }
+    const rot=[];
+    plan.forEach(p=>{for(let i=0;i<p.count;i++)rot.push(p.ts);});
+    return rot.slice(0,nSlots);
+  }
+
+  const sorted=[...state.groepen].sort((a,b)=>{
+    if(isComp(a.groepType)!==isComp(b.groepType))return isComp(a.groepType)?-1:1;
+    return a.prioriteit-b.prioriteit;
+  });
 
   sorted.forEach(g=>{
     const verplicht=[...getVerplicht(g)];
-    const maxBlok=isComp(g.groepType)?(state.regels.maxBlokComp||2):(state.regels.maxBlokRecrea||1);
-    const isTU=isTumbling(g.groepType);
-    const extraCandidates=TOESTELLEN.filter(t=>!verplicht.includes(t)&&toestelPrio(g,t)>2).sort((a,b)=>toestelPrio(g,b)-toestelPrio(g,a));
-    const trainingDagen=g.dagen;
+    const optioneel=(state.regels.optioneel||{})[g.groepType]||[];
+    // toegestaan = verplicht + optioneel, no combos
+    const toegestaan=[...new Set([...verplicht,...optioneel])].filter(t=>!t.startsWith('COMBO:'));
+    const maxBlok=maxBlokSlots(g);
     const verplichtSorted=[...verplicht].sort((a,b)=>toestelPrio(g,b)-toestelPrio(g,a));
-    const dagPlan={};trainingDagen.forEach(d=>dagPlan[d]=[]);
+    const nDagen=g.dagen.length;
 
-    // Spread verplicht across days, no repeat per day
-    let dagIdx=0;
-    verplichtSorted.forEach(ts=>{
-      let placed=false;
-      for(let i=0;i<trainingDagen.length;i++){
-        const d=trainingDagen[(dagIdx+i)%trainingDagen.length];
-        if(dagPlan[d].includes(ts))continue;
-        // TU/Trampo must share day with Vloer or Balk
-        if(ts==='Tumbling (TU)'||ts==='Trampoline'){
-          const groundDay=trainingDagen.find(dd=>(dagPlan[dd].includes('Vloer')||dagPlan[dd].includes('Balk'))&&!dagPlan[dd].includes(ts));
-          const target=groundDay||d;
-          if(!dagPlan[target].includes(ts)){dagPlan[target].push(ts);placed=true;dagIdx=(trainingDagen.indexOf(target)+1)%trainingDagen.length;break;}
-        } else {
-          dagPlan[d].push(ts);dagIdx=(dagIdx+i+1)%trainingDagen.length;placed=true;break;
-        }
+    g.dagen.forEach((dag,dagIndex)=>{
+      const allSlots=slotsForDag(g,dag);
+      if(!allSlots.length) return;
+      if(!newRooster[dag]) newRooster[dag]=[];
+
+      // ── Opwarming: 2 slots ──
+      const opwTs=pickOpwarming(g,dag,allSlots[0]);
+      newRooster[dag].push({groepId:g.id,time:allSlots[0],toestel:opwTs||'Vloer',isOpwarming:true});
+      if(allSlots.length>1){
+        const opwTs2=pickOpwarming(g,dag,allSlots[1])||opwTs||'Vloer';
+        newRooster[dag].push({groepId:g.id,time:allSlots[1],toestel:opwTs2,isOpwarming:true});
       }
-      if(!placed){const d=trainingDagen.reduce((a,b)=>dagPlan[a].length<=dagPlan[b].length?a:b);if(!dagPlan[d].includes(ts))dagPlan[d].push(ts);}
-    });
 
-    // Fill extra
-    trainingDagen.forEach(d=>{
-      const slots=groupSlots(g,d);
-      const spt=Math.max(1,Math.round(slots.length/Math.max(dagPlan[d].length,1)));
-      const more=Math.floor(slots.length/spt)-dagPlan[d].length;
-      if(more>0)extraCandidates.filter(t=>!dagPlan[d].includes(t)).slice(0,more).forEach(t=>dagPlan[d].push(t));
-    });
+      // ── Cooldown: last slot (comp only) ──
+      const doCooldown=isComp(g.groepType)&&state.regels.cooldownComp!==false&&allSlots.length>4;
+      if(doCooldown){
+        const coolTs=pickOpwarming(g,dag,allSlots[allSlots.length-1])||opwTs||'Vloer';
+        newRooster[dag].push({groepId:g.id,time:allSlots[allSlots.length-1],toestel:coolTs,isCooldown:true});
+      }
 
-    // Assign slots as blocks
-    trainingDagen.forEach(dag=>{
-      const slots=groupSlots(g,dag);
-      const plan=dagPlan[dag];if(!plan.length)return;
-      if(!newRooster[dag])newRooster[dag]=[];
-      const blockSize=Math.floor(slots.length/plan.length);
-      const remainder=slots.length%plan.length;
-      let si=0;
-      plan.forEach((ts,pi)=>{
-        const bsize=Math.min(maxBlok,blockSize+(pi<remainder?1:0));
-        for(let i=0;i<bsize;i++){
-          const time=slots[si++];if(!time)continue;
-          // Try combo first
-          const combo=bestCombo(g,dag,time);
-          const chosenTs=combo||ts;
-          if(hasCap(dag,time,chosenTs.startsWith('COMBO:')?chosenTs.slice(6).split('+')[0]:chosenTs,g.gymnasten)){
-            newRooster[dag].push({groepId:g.id,time,toestel:chosenTs});
+      const workSlots=doCooldown?allSlots.slice(2,-1):allSlots.slice(2);
+      if(!workSlots.length) return;
+
+      // ── What's been done this week ──
+      const doneThisWeek=new Set();
+      g.dagen.filter((_,i)=>i<dagIndex).forEach(d=>{
+        (newRooster[d]||[]).filter(r=>r.groepId===g.id&&!r.isOpwarming&&!r.isCooldown).forEach(r=>{
+          const pts=r.toestel.startsWith('COMBO:')?r.toestel.slice(6).split('+'):[r.toestel];
+          pts.forEach(x=>doneThisWeek.add(x));
+        });
+      });
+
+      // ── Determine todayVerplicht ──
+      let todayVerplicht;
+      if(isComp(g.groepType)){
+        const stillNeeded=verplichtSorted.filter(ts=>!doneThisWeek.has(ts));
+        const daysLeft=nDagen-dagIndex;
+        const isLastDay=dagIndex===nDagen-1;
+        const perDay=Math.max(2,Math.ceil(stillNeeded.length/daysLeft));
+        todayVerplicht=isLastDay
+          ?(stillNeeded.length?stillNeeded:verplichtSorted.slice(0,2))
+          :stillNeeded.slice(0,perDay);
+        if(todayVerplicht.length<2){
+          verplichtSorted.forEach(ts=>{if(todayVerplicht.length<2&&!todayVerplicht.includes(ts))todayVerplicht.push(ts);});
+        }
+      } else {
+        const stillNeeded=verplichtSorted.filter(ts=>!doneThisWeek.has(ts));
+        const daysLeft=nDagen-dagIndex;
+        const isLastDay=dagIndex===nDagen-1;
+        todayVerplicht=isLastDay?stillNeeded:stillNeeded.filter((_,i)=>i%daysLeft===0);
+        if(!todayVerplicht.length) todayVerplicht=verplichtSorted.slice(0,1);
+      }
+
+      // Vloer+TU rule for non-TU groups
+      if(!isTumbling(g.groepType)&&todayVerplicht.includes('Vloer')&&todayVerplicht.includes('Tumbling (TU)')){
+        todayVerplicht=todayVerplicht.filter(t=>t!=='Tumbling (TU)');
+      }
+
+      // ── Build rotation (no combos) ──
+      const todayOptioneel=optioneel.filter(t=>!todayVerplicht.includes(t))
+        .sort((a,b)=>toestelPrio(g,b)-toestelPrio(g,a));
+      const rotation=buildRotation(workSlots.length, maxBlok, todayVerplicht, todayOptioneel);
+
+      // ── Assign slots ──
+      workSlots.forEach((time,i)=>{
+        const preferred=rotation[i];
+        if(preferred&&hasCap(dag,time,preferred,g.gymnasten)){
+          newRooster[dag].push({groepId:g.id,time,toestel:preferred});
+        } else {
+          // Fallback: pick toestel with most remaining capacity
+          const alt=toegestaan
+            .filter(ts=>hasCap(dag,time,ts,g.gymnasten))
+            .sort((a,b)=>capacityUsed(dag,time,a)-capacityUsed(dag,time,b))[0];
+          if(alt){
+            newRooster[dag].push({groepId:g.id,time,toestel:alt});
+            if(preferred) log.push({type:'swap',msg:`${g.naam} ${dag} ${time}: ${preferred} vol → ${alt}`});
           } else {
-            const alt=TOESTELLEN.filter(t=>t!==ts&&hasCap(dag,time,t,g.gymnasten)).sort((a,b)=>toestelPrio(g,b)-toestelPrio(g,a))[0];
-            if(alt){newRooster[dag].push({groepId:g.id,time,toestel:alt});log.push({type:'swap',msg:`${g.naam} ${dag} ${time}: ${ts} vol → ${alt}`});}
-            else log.push({type:'fail',msg:`${g.naam} ${dag} ${time}: geen toestel beschikbaar`});
+            log.push({type:'fail',msg:`${g.naam} ${dag} ${time}: geen toestel beschikbaar`});
           }
         }
       });
