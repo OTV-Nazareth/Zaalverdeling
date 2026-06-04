@@ -9,7 +9,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;color:#1a1a1a;font-size:14px;background:#f2f1ed;min-height:100vh}
-.app{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.app{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 4rem}
 h1{font-size:20px;font-weight:500;margin-bottom:.25rem}
 .subtitle{font-size:13px;color:#888;margin-bottom:1.5rem}
 .tabs{display:flex;gap:2px;border-bottom:1px solid #ddd;margin-bottom:1.5rem;overflow-x:auto}
@@ -48,10 +48,15 @@ label:first-child{margin-top:0}
 .modal{background:#fff;border-radius:14px;padding:1.5rem;width:94%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.18)}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:1rem}
 .timetable{border-collapse:collapse;font-size:12px;min-width:500px}
+.rooster-scroll{overflow:auto;max-height:calc(100vh - 280px);border:1px solid #e0e0d8;border-radius:10px;background:#fff}
+.timetable thead th{position:sticky;top:0;z-index:5;background:#f5f5f0}
+.timetable thead th.gh{position:sticky;top:0;z-index:6}
+.timetable td.time-cell,.timetable td.tc{position:sticky;left:0;z-index:3;background:#fafaf8}
+.timetable td:nth-child(2){position:sticky;left:52px;z-index:3;background:#fafaf8}
 .timetable th{background:#f5f5f0;padding:5px 4px;text-align:center;border:1px solid #e0e0d8;font-weight:500;font-size:11px}
 .timetable th.gh{text-align:left;min-width:80px}
 .timetable td{padding:2px 3px;border:1px solid #e8e8e4;vertical-align:middle;text-align:center;min-width:60px}
-.timetable td.tc{font-size:11px;font-weight:500;color:#888;background:#fafaf8;white-space:nowrap;text-align:right;padding-right:8px}
+.timetable td.time-cell,.timetable td.tc{font-size:11px;font-weight:500;color:#888;background:#fafaf8;white-space:nowrap;text-align:right;padding-right:8px}
 .timetable td.ti{background:#f9f9f7}
 .timetable td.tw{background:#fff0f0}
 .timetable td.cl:hover{background:#eff6ff;cursor:pointer}
@@ -92,6 +97,15 @@ label:first-child{margin-top:0}
 .cr-err{background:#fee2e2;color:#991b1b}.cr-warn{background:#fef9c3;color:#854d0e}.cr-info{background:#eff6ff;color:#1e40af}
 .dag-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;background:#f9f9f7;border-radius:6px;padding:4px 8px}
 .cel-selected{outline:2px solid #1a1a1a;outline-offset:1px}
+
+#autosaveBar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:1px solid #e0e0d8;
+  padding:6px 16px;
+  display:flex;align-items:center;gap:10px;
+  font-size:11px;z-index:50;
+  box-shadow:0 -2px 8px rgba(0,0,0,.06);
+}
 </style>
 </head>
 <body>
@@ -105,6 +119,7 @@ label:first-child{margin-top:0}
   <button class="tab" onclick="showTab('regels')">⚙️ Regels</button>
   <button class="tab" onclick="showTab('rooster')">📅 Rooster</button>
   <button class="tab" onclick="showTab('validatie')">✓ Validatie</button>
+  <button class="tab" onclick="showTab('dekking')">📊 Dekking</button>
   <button class="tab" onclick="showTab('export')">⬇ Export</button>
 </div>
 
@@ -139,6 +154,16 @@ label:first-child{margin-top:0}
   <div id="startStats" style="display:none">
     <div class="section-title">Huidig overzicht</div>
     <div class="grid3" id="startStatCards"></div>
+  </div>
+  <div class="card" style="margin-top:12px" id="startCloudCard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin:0">☁️ Opgeslagen roosters</div>
+      <div class="btn-group">
+        <button class="btn btn-sm" onclick="renderStartCloudList()">🔄 Vernieuwen</button>
+        <button class="btn btn-primary btn-sm" onclick="openSaveModal()">☁️ Huidig opslaan</button>
+      </div>
+    </div>
+    <div id="startCloudList"><p style="font-size:12px;color:#bbb">Klik op Vernieuwen om opgeslagen roosters te laden.</p></div>
   </div>
 </div>
 
@@ -196,8 +221,22 @@ label:first-child{margin-top:0}
     </select>
     <div id="dagStats" style="font-size:12px;color:#888;flex:1"></div>
     <button class="btn btn-primary btn-sm" onclick="openSolverModal()">✨ Auto-solver</button>
+    <div style="display:flex;align-items:center;gap:4px;margin-left:4px">
+      <button class="btn btn-sm" onclick="roosterZoom(-1)" title="Kleiner">−</button>
+      <span id="zoomLabel" style="font-size:11px;color:#888;min-width:32px;text-align:center">100%</span>
+      <button class="btn btn-sm" onclick="roosterZoom(1)" title="Groter">+</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span style="font-size:11px;color:#888">Breedte:</span>
+      <input type="range" id="colWidthSlider" min="50" max="160" value="80" style="width:80px" oninput="setColWidth(this.value)">
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;border-left:1px solid #e0e0d8;padding-left:8px">
+      <span style="font-size:11px;color:#888">Vrij:</span>
+      <button class="btn btn-sm" id="vrijToggleBtn" onclick="toggleVrijKolom()" title="Vrije kolom tonen/verbergen" style="padding:2px 8px;font-size:11px">👁</button>
+      <input type="range" id="vrijWidthSlider" min="60" max="300" value="110" style="width:70px" oninput="setVrijWidth(this.value)" title="Breedte vrije kolom">
+    </div>
   </div>
-  <div style="overflow-x:auto;border:1px solid #e0e0d8;border-radius:10px;background:#fff">
+  <div class="rooster-scroll" id="roosterScroll">
     <table class="timetable" id="roosterTable"></table>
   </div>
   <div id="vrijPanel" style="margin-top:10px"></div>
@@ -227,6 +266,20 @@ label:first-child{margin-top:0}
 </div>
 
 <!-- EXPORT -->
+<div id="tab-dekking" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div class="section-title" style="margin:0">Toesteldekking per groep</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="dekkingFilter" onchange="renderDekking()" style="width:auto;font-size:12px;padding:4px 8px">
+        <option value="all">Alle groepen</option>
+        <option value="comp">Alleen comp</option>
+        <option value="recrea">Alleen recrea</option>
+        <option value="incomplete">Ontbreekt nog</option>
+      </select>
+    </div>
+  </div>
+  <div id="dekkingGrid"></div>
+</div>
 <div id="tab-export" style="display:none">
   <div class="grid2" style="margin-bottom:12px">
     <div class="card">
@@ -392,6 +445,146 @@ function loadSchema(s){
   state.rooster={};state.nextId=state.groepen.length+1;
   renderSchemas();renderStartStats();showTab('groepen');
 }
+
+async function renderStartCloudList(){
+  const el=document.getElementById('startCloudList');
+  if(!el) return;
+  if(!SUPABASE_URL||!SUPABASE_ANON_KEY){
+    el.innerHTML='<p style="font-size:12px;color:#888">Supabase niet geconfigureerd. Ga naar Export → ⚙️ Configuratie instellen.</p>';
+    return;
+  }
+  el.innerHTML='<p style="font-size:12px;color:#888">Laden…</p>';
+  const lijst=await loadRoostersList();
+  if(!lijst.length){el.innerHTML='<p style="font-size:12px;color:#888">Nog geen opgeslagen roosters.</p>';return;}
+  el.innerHTML='<div style="display:grid;gap:6px">'+lijst.map(r=>{
+    const d=new Date(r.updated_at).toLocaleString('nl-BE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="row" style="flex-wrap:nowrap;gap:8px;padding:8px 0">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500">${r.naam} <span style="font-size:11px;color:#888;font-weight:400">— ${r.seizoen}</span></div>
+        <div style="font-size:11px;color:#aaa">${r.auteur||'onbekend'} · ${d}${r.beschrijving?' · '+r.beschrijving:''}</div>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="doLoadCloud('${r.id}','${r.naam.replace(/'/g,"\\'")}')">📂 Laden</button>
+      <button class="btn btn-sm" onclick="openSaveModal('${r.id}',{naam:'${r.naam.replace(/'/g,"\\'")}',seizoen:'${(r.seizoen||'').replace(/'/g,"\\'")}',beschrijving:'${(r.beschrijving||'').replace(/'/g,"\\'")}',auteur:'${(r.auteur||'').replace(/'/g,"\\'")}'})" title="Overschrijven">💾</button>
+      <button class="btn btn-sm btn-danger" onclick="doDeleteCloud('${r.id}','${r.naam.replace(/'/g,"\\'")}')">🗑</button>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+
+let _roosterZoom = 100;
+let _colWidth = 80;
+
+function roosterZoom(dir){
+  _roosterZoom = Math.max(60, Math.min(150, _roosterZoom + dir * 10));
+  document.getElementById('zoomLabel').textContent = _roosterZoom + '%';
+  const tbl = document.getElementById('roosterTable');
+  if(tbl) tbl.style.fontSize = (_roosterZoom / 100 * 12) + 'px';
+  applyColWidths();
+}
+
+function setColWidth(val){
+  _colWidth = parseInt(val);
+  applyColWidths();
+}
+
+function applyColWidths(){
+  const tbl = document.getElementById('roosterTable');
+  if(!tbl) return;
+  // Apply to all group header cells (th.gh except first two)
+  tbl.querySelectorAll('thead th.gh').forEach((th,i)=>{
+    if(i>1){ // skip tijdslot + vrij columns
+      th.style.minWidth = _colWidth + 'px';
+      th.style.maxWidth = (_colWidth + 20) + 'px';
+    }
+  });
+  // Apply to all data cells
+  tbl.querySelectorAll('tbody td:not(.tc)').forEach((td,i)=>{
+    if(i%1===0) td.style.minWidth = _colWidth + 'px';
+  });
+}
+
+
+function renderDekking(){
+  const el=document.getElementById('dekkingGrid');
+  if(!el) return;
+  const filter=document.getElementById('dekkingFilter')?.value||'all';
+
+  // Build coverage per group across entire week
+  const groepen=state.groepen.filter(g=>{
+    if(filter==='comp') return isComp(g.groepType);
+    if(filter==='recrea') return !isComp(g.groepType);
+    return true;
+  }).sort((a,b)=>{
+    if(isComp(a.groepType)!==isComp(b.groepType)) return isComp(a.groepType)?-1:1;
+    return a.prioriteit-b.prioriteit||a.naam.localeCompare(b.naam);
+  });
+
+  if(!groepen.length){el.innerHTML='<p style="color:#888;font-size:13px">Geen groepen.</p>';return;}
+
+  const rows=groepen.map(g=>{
+    // Collect all toestellen done this week (excl opw/cool)
+    const dek=new Set();
+    g.dagen.forEach(d=>{
+      genTimes(d).filter(t=>isActiveAtTime(g,t,d)).forEach(t=>{
+        const a=getA(d,g.id,t);
+        if(a&&!a.isOpwarming&&!a.isCooldown){
+          const pts=a.toestel.startsWith('COMBO:')?a.toestel.slice(6).split('+'):[a.toestel];
+          pts.forEach(x=>dek.add(x));
+        }
+      });
+    });
+
+    const verplicht=getVerplicht(g);
+    const optioneel=(state.regels.optioneel||{})[g.groepType]||[];
+    const alleToestellen=[...new Set([...verplicht,...optioneel])];
+
+    // Count total work slots
+    const totalSlots=g.dagen.reduce((s,d)=>{
+      const all=genTimes(d).filter(t=>isActiveAtTime(g,t,d));
+      const opwCool=2+(isComp(g.groepType)&&state.regels.cooldownComp!==false?1:0);
+      return s+Math.max(0,all.length-opwCool);
+    },0);
+    const usedSlots=g.dagen.reduce((s,d)=>s+(state.rooster[d]||[]).filter(r=>r.groepId===g.id&&!r.isOpwarming&&!r.isCooldown).length,0);
+    const fillPct=totalSlots?Math.round(usedSlots/totalSlots*100):0;
+
+    if(filter==='incomplete'&&verplicht.every(t=>dek.has(t))) return '';
+
+    const ti=typeInfo(g.groepType);
+    const toestelBtns=alleToestellen.map(ts=>{
+      const isVerp=verplicht.includes(ts);
+      const done=dek.has(ts);
+      const bg=done?(isVerp?'#dcfce7':'#f0fdf4'):(isVerp?'#fee2e2':'#f5f5f0');
+      const col=done?(isVerp?'#14532d':'#166534'):(isVerp?'#991b1b':'#888');
+      const border=done?(isVerp?'#86efac':'#d1fae5'):(isVerp?'#fca5a5':'#e5e7eb');
+      const icon=done?'✓':'✗';
+      return `<span style="padding:2px 8px;border-radius:5px;font-size:11px;background:${bg};color:${col};border:1px solid ${border}">${icon} ${SHORT[ts]||ts}${isVerp?'':' ·'}</span>`;
+    }).join('');
+
+    const verplichtDone=verplicht.filter(t=>dek.has(t)).length;
+    const verplichtPct=verplicht.length?Math.round(verplichtDone/verplicht.length*100):100;
+    const pctCol=verplichtPct===100?'#16a34a':verplichtPct>=60?'#d97706':'#dc2626';
+
+    return `<div class="card" style="margin-bottom:8px;padding:.75rem 1rem">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <span class="badge ${ti.badge}" style="font-size:10px">${ti.label}</span>
+        <span style="font-weight:500;font-size:13px">${esc(g.naam)}</span>
+        <span style="font-size:11px;color:#888">${g.gymnasten} gymn.</span>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;font-weight:600;color:${pctCol}">${verplichtDone}/${verplicht.length} verplicht (${verplichtPct}%)</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div style="width:80px;height:5px;background:#eee;border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${fillPct}%;background:${fillPct>80?'#16a34a':fillPct>40?'#d97706':'#e5e7eb'};border-radius:3px"></div>
+          </div>
+          <span style="font-size:10px;color:#888">${fillPct}% vol</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${toestelBtns}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = rows || '<p style="color:#888;font-size:13px">Alle groepen zijn compleet! ✅</p>';
+}
+
 function renderSchemas(){
   document.getElementById('schemaKaarten').innerHTML=SCHEMAS.map(s=>`<div class="schema-card" onclick="loadSchema(SCHEMAS.find(x=>x.id==='${s.id}'))"><div style="font-weight:500;font-size:13px;margin-bottom:3px">${s.titel}</div><div style="font-size:12px;color:#888">${s.beschrijving}</div></div>`).join('');
 }
@@ -406,11 +599,13 @@ function renderStartStats(){
 }
 
 function showTab(n){
-  ['start','groepen','regels','rooster','validatie','export'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===n?'':'none';});
-  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['start','groepen','regels','rooster','validatie','export'][i]===n));
+  ['start','groepen','regels','rooster','validatie','dekking','export'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===n?'':'none';});
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['start','groepen','regels','rooster','validatie','dekking','export'][i]===n));
   if(n==='rooster')renderRooster();if(n==='validatie')renderValidatie();
-  if(n==='regels')renderRegels();if(n==='groepen')renderGroepen();if(n==='start')renderStartStats();
+  if(n==='regels')renderRegels();if(n==='groepen')renderGroepen();
+  if(n==='start'){renderStartStats();renderStartCloudList();}
   if(n==='export')renderCloudList();
+  if(n==='dekking')renderDekking();
 }
 
 // ── GROEPEN ──
@@ -601,7 +796,20 @@ function isActiveAtTime(g,t,dag){return isActief(g,t,dag);}
 function getA(d,gid,t){return(state.rooster[d]||[]).find(r=>r.groepId===gid&&r.time===t);}
 function setA(d,gid,t,ts,isOpw,isCool){if(!state.rooster[d])state.rooster[d]=[];state.rooster[d]=state.rooster[d].filter(r=>!(r.groepId===gid&&r.time===t));if(ts)state.rooster[d].push({groepId:gid,time:t,toestel:ts,isOpwarming:!!isOpw,isCooldown:!!isCool});setTimeout(renderConflictPanel,50);}
 
-function totOp(d,t,ts){return(state.rooster[d]||[]).filter(r=>r.time===t&&r.toestel===ts).reduce((s,r)=>{const g=state.groepen.find(x=>x.id===r.groepId);return s+(g?g.gymnasten:0);},0);}
+function totOp(d,t,ts){
+  return(state.rooster[d]||[]).filter(r=>{
+    if(r.time!==t) return false;
+    if(r.toestel===ts) return true;
+    // Count COMBO slots that include this toestel (half capacity each)
+    if(r.toestel&&r.toestel.startsWith('COMBO:')&&r.toestel.slice(6).split('+').includes(ts)) return true;
+    return false;
+  }).reduce((s,r)=>{
+    const g=state.groepen.find(x=>x.id===r.groepId);
+    const gymn=g?g.gymnasten:0;
+    // COMBO: count full gymnasten (both toestellen are in use simultaneously)
+    return s+gymn;
+  },0);
+}
 function getVerplicht(g){return state.regels.verplicht[g.groepType]||[];}
 
 // ── ROOSTER render ──
@@ -632,11 +840,15 @@ function renderRooster(){
   html+='</tr></thead><tbody>';
   times.forEach(t=>{
         const activeG=state.groepen.filter(g=>g.dagen.includes(dag)&&isActiveAtTime(g,t,dag));
-    // Smallest group that does NOT yet have an assignment at this time slot
+    // Only show vrij if there are unassigned groups that could use it
     const unassignedG=activeG.filter(g=>!getA(dag,g.id,t));
-    const smallestG=unassignedG.length?Math.min(...unassignedG.map(g=>g.gymnasten))
-                   :activeG.length?Math.min(...activeG.map(g=>g.gymnasten)):1;
-    const vrijNu=TOESTELLEN.filter(ts=>totOp(dag,t,ts)+smallestG<=(state.regels.capaciteit[ts]||99));
+    const vrijNu=unassignedG.length===0
+      ? [] // all groups assigned at this slot → nothing is "vrij te kiezen"
+      : TOESTELLEN.filter(ts=>{
+          // Would the smallest unassigned group fit?
+          const smallest=Math.min(...unassignedG.map(g=>g.gymnasten));
+          return totOp(dag,t,ts)+smallest<=(state.regels.capaciteit[ts]||99);
+        });
     const vrijHtml=vrijNu.map(ts=>`<span class="slot ${TS_CLASS[ts]||''}" style="font-size:9px;padding:1px 4px;margin:1px;display:inline-block">${SHORT[ts]}</span>`).join('');
     html+=`<tr><td class="tc">${t}</td><td style="padding:2px 4px;vertical-align:middle;border:1px solid #e8e8e4;background:#fafaf8">${vrijHtml}</td>`;
     gs.forEach(g=>{
@@ -649,7 +861,7 @@ function renderRooster(){
     html+='</tr>';
   });
   tbl.innerHTML=html+'</tbody>';
-  setTimeout(()=>{renderVrijToestellen();renderConflictPanel();},0);
+  setTimeout(()=>{renderVrijToestellen();renderConflictPanel();applyColWidths();applyVrijStyle();},0);
 }
 
 function openCelModal(dag,gid,t){
@@ -1240,7 +1452,7 @@ function loadConfig(){
 function saveConfig(url,key,pw){
   localStorage.setItem('zaalverdeling_config',JSON.stringify({url,key,pw}));
   SUPABASE_URL=url;SUPABASE_ANON_KEY=key;CLUB_WACHTWOORD=pw;
-  _supaClient=null;_supaReady=false;_authenticated=false;
+  _supaClient=null;_supaReady=false;_authenticated=false;sessionStorage.removeItem('zv_auth');
   initSupabase();
 }
 
@@ -1305,9 +1517,16 @@ function checkAuth(){
     openConfigModal();return false;
   }
   if(!CLUB_WACHTWOORD){_authenticated=true;return true;}
-  if(_authenticated) return true;
+  // Remember auth for this browser session
+  if(_authenticated||sessionStorage.getItem('zv_auth')==='1') {
+    _authenticated=true;return true;
+  }
   const pw=prompt('Clubwachtwoord:');
-  if(pw===CLUB_WACHTWOORD){_authenticated=true;return true;}
+  if(pw===CLUB_WACHTWOORD){
+    _authenticated=true;
+    sessionStorage.setItem('zv_auth','1');
+    return true;
+  }
   alert('Verkeerd wachtwoord.');return false;
 }
 
@@ -1387,8 +1606,10 @@ async function doSaveCloud(existingId){
   const result=await saveRoosterCloud(naam,seizoen,beschr,auteur,existingId||null);
   closeModal();
   if(result){
+    _autosaveId=result.id;_autosaveName=result.naam;_autosaveDirty=false;
+    updateAutosaveStatus('✅ Opgeslagen: '+naam,'#16a34a');
     showCloudStatus(`✅ Opgeslagen: "${naam}"`,'#16a34a');
-    renderCloudList();
+    renderCloudList();renderStartCloudList();
   } else {
     showCloudStatus('❌ Opslaan mislukt. Controleer je Supabase configuratie.','#dc2626');
   }
@@ -1432,6 +1653,8 @@ async function doLoadCloud(id,naam){
   if(r.state_json&&r.state_json.regels&&!r.state_json.regels.optioneel)
     r.state_json.regels.optioneel=JSON.parse(JSON.stringify(DEFAULT_OPTIONEEL));
   state=r.state_json;
+  _autosaveId=id;_autosaveName=naam;_autosaveDirty=false;
+  updateAutosaveStatus('📂 Geladen: '+naam,'#16a34a');
   showCloudStatus(`✅ Geladen: "${naam}"`,'#16a34a');
   showTab('groepen');
 }
@@ -1440,13 +1663,155 @@ async function doDeleteCloud(id,naam){
   if(!checkAuth()) return;
   if(!confirm(`Rooster "${naam}" permanent verwijderen?`)) return;
   const ok=await deleteRoosterCloud(id);
-  if(ok){showCloudStatus(`🗑 Verwijderd: "${naam}"`,'#888');renderCloudList();}
+  if(ok){showCloudStatus(`🗑 Verwijderd: "${naam}"`,'#888');renderCloudList();renderStartCloudList();}
   else showCloudStatus('❌ Verwijderen mislukt.','#dc2626');
 }
 
 loadConfig();
 renderSchemas();
+
+let _vrijVisible = true;
+let _vrijWidth = 110;
+
+function toggleVrijKolom(){
+  _vrijVisible = !_vrijVisible;
+  const btn = document.getElementById('vrijToggleBtn');
+  const slider = document.getElementById('vrijWidthSlider');
+  if(btn) btn.style.opacity = _vrijVisible ? '1' : '.4';
+  if(slider) slider.disabled = !_vrijVisible;
+  applyVrijStyle();
+}
+
+function setVrijWidth(val){
+  _vrijWidth = parseInt(val);
+  applyVrijStyle();
+}
+
+function applyVrijStyle(){
+  const tbl = document.getElementById('roosterTable');
+  if(!tbl) return;
+  // The vrij column is the 2nd th/td in each row
+  tbl.querySelectorAll('thead tr th:nth-child(2), tbody tr td:nth-child(2)').forEach(el=>{
+    el.style.display = _vrijVisible ? '' : 'none';
+    if(_vrijVisible){
+      el.style.minWidth = _vrijWidth + 'px';
+      el.style.maxWidth = (_vrijWidth + 40) + 'px';
+    }
+  });
+}
+
+
+// ═══════════════════════════════════════════
+// AUTOSAVE
+// ═══════════════════════════════════════════
+let _autosaveTimer = null;
+let _autosaveId = null;      // ID van het huidig geladen rooster (voor overschrijven)
+let _autosaveName = null;    // Naam van het huidig geladen rooster
+let _autosaveDirty = false;  // Zijn er onopgeslagen wijzigingen?
+
+function markDirty(){
+  if(_saving) return; // don't mark dirty while saving
+  _autosaveDirty = true;
+  updateAutosaveStatus('⏳ Onopgeslagen wijzigingen…', '#d97706');
+  clearTimeout(_autosaveTimer);
+  _autosaveTimer = setTimeout(autosaveNow, 2000);
+}
+
+let _saving = false;
+async function autosaveNow(){
+  if(!_autosaveDirty||_saving) return;
+  if(!SUPABASE_URL||!SUPABASE_ANON_KEY) return;
+  if(!_autosaveId&&!_autosaveName){
+    updateAutosaveStatus('💾 Geef een naam via Export → Opslaan als…', '#888');
+    return;
+  }
+  _saving = true;
+  updateAutosaveStatus('💾 Opslaan…', '#888');
+  const naam = _autosaveName || 'Autosave';
+  try{
+    const result = await saveRoosterCloud(naam, '', '', '', _autosaveId||null);
+    if(result){
+      _autosaveId = result.id;
+      _autosaveName = result.naam;
+      _autosaveDirty = false;
+      updateAutosaveStatus('✅ '+naam+' — '+new Date().toLocaleTimeString('nl-BE'), '#16a34a');
+      // Refresh lists but don't trigger markDirty
+      loadRoostersList().then(lijst=>{
+        _refreshCloudLists(lijst);
+      });
+    } else {
+      updateAutosaveStatus('❌ Autosave mislukt', '#dc2626');
+    }
+  } finally {
+    _saving = false;
+  }
+}
+function _refreshCloudLists(lijst){
+  // Render cloud lists without triggering any state changes
+  const el1=document.getElementById('startCloudList');
+  const el2=document.getElementById('cloudList');
+  if(!lijst||!lijst.length) return;
+  const html=lijst.map(r=>{
+    const d=new Date(r.updated_at).toLocaleString('nl-BE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="row" style="flex-wrap:nowrap;gap:8px;padding:8px 0">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500">${r.naam} <span style="font-size:11px;color:#888;font-weight:400">— ${r.seizoen||''}</span></div>
+        <div style="font-size:11px;color:#aaa">${r.auteur||'onbekend'} · ${d}</div>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="doLoadCloud('${r.id}','${r.naam.replace(/'/g,"\'")}')">📂</button>
+      <button class="btn btn-sm btn-danger" onclick="doDeleteCloud('${r.id}','${r.naam.replace(/'/g,"\'")}')">🗑</button>
+    </div>`;
+  }).join('');
+  if(el1) el1.innerHTML='<div style="display:grid;gap:2px">'+html+'</div>';
+  if(el2) el2.innerHTML='<div style="display:grid;gap:2px">'+html+'</div>';
+}
+
+function updateAutosaveStatus(msg, color){
+  const el = document.getElementById('autosaveStatus');
+  if(el){ el.textContent = msg; el.style.color = color; }
+}
+
+// Hook markDirty into setA (rooster changes)
+const _origSetA = setA;
+function setA(d,gid,t,ts,isOpw,isCool){
+  _origSetA(d,gid,t,ts,isOpw,isCool);
+  markDirty();
+}
+
+// Hook markDirty into saveGroep (group changes)
+const _origSaveGroep = saveGroep;
+function saveGroep(id){
+  _origSaveGroep(id);
+  markDirty();
+}
+
+// Set autosave context when loading from cloud
+const _origDoLoadCloud = doLoadCloud;
+async function doLoadCloud(id, naam){
+  await _origDoLoadCloud(id, naam);
+  _autosaveId = id;
+  _autosaveName = naam;
+  _autosaveDirty = false;
+  updateAutosaveStatus(`📂 Geladen: ${naam}`, '#16a34a');
+}
+
+// Set autosave context when saving manually
+const _origDoSaveCloud = doSaveCloud;
+async function doSaveCloud(existingId){
+  await _origDoSaveCloud(existingId);
+  // After save, update autosave context from the saved result
+  // (doSaveCloud sets _autosaveId internally via saveRoosterCloud)
+  _autosaveDirty = false;
+}
+
 initSupabase();
 </script>
+
+<div id="autosaveBar">
+  <span id="autosaveStatus" style="color:#bbb">Geen wijzigingen</span>
+  <button class="btn btn-sm" onclick="autosaveNow()" style="padding:2px 8px;font-size:11px" title="Nu opslaan">💾 Nu opslaan</button>
+  <button class="btn btn-sm" onclick="openSaveModal(_autosaveId,{naam:_autosaveName||''})" style="padding:2px 8px;font-size:11px" title="Opslaan als…">📋 Opslaan als…</button>
+</div>
+
 </body>
 </html>
