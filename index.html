@@ -1254,15 +1254,25 @@ function renderRooster() {
 
   // Rows
   times.forEach(t => {
-    // Toon toestellen die nog ruimte hebben (ongeacht of groepen al ingepland zijn)
-    const vrijNu = TOESTELLEN.filter(ts => {
-      const max  = state.regels.capaciteit[ts] || 99;
-      const used = totOp(dag, t, ts);
-      return used < max;
+    // Toon toestellen waarop nog minstens één niet-ingeplande groep past
+    const activeG     = state.groepen.filter(g => g.dagen.includes(dag) && isActiveAtTime(g, t, dag));
+    const unassignedG = activeG.filter(g => !getA(dag, g.id, t));
+    const vrijNu = unassignedG.length === 0 ? [] : TOESTELLEN.filter(ts => {
+      const max      = state.regels.capaciteit[ts] || 99;
+      const used     = totOp(dag, t, ts);
+      const smallest = Math.min(...unassignedG.map(g => g.gymnasten));
+      return used + smallest <= max;
     });
-    const vrijHtml = vrijNu.map(ts =>
-      `<span class="slot ${TS_CLASS[ts]||''}" style="font-size:9px;padding:1px 4px;margin:1px;display:inline-block">${SHORT[ts]}</span>`
-    ).join('');
+    const vrijHtml = vrijNu.map(ts => {
+      const used = totOp(dag, t, ts);
+      const max  = state.regels.capaciteit[ts] || 99;
+      const pct  = Math.round(used / max * 100);
+      const col  = pct === 0 ? '' : pct < 60 ? 'opacity:.85' : 'opacity:.6';
+      return `<span class="slot ${TS_CLASS[ts]||''}" style="font-size:9px;padding:1px 4px;margin:1px;display:inline-flex;flex-direction:column;align-items:center;gap:0;${col}" title="${ts}: ${used}/${max}">
+        <span>${SHORT[ts]}</span>
+        <span style="font-size:8px;opacity:.7;line-height:1">${used}/${max}</span>
+      </span>`;
+    }).join('');
     html += `<tr><td class="tc">${t}</td><td style="padding:2px 4px;vertical-align:middle;border:1px solid #e8e8e4;background:#fafaf8">${vrijHtml}</td>`;
     gs.forEach(g => {
       if (!isActiveAtTime(g, t, dag)) { html += '<td class="ti"></td>'; return; }
