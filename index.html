@@ -776,6 +776,7 @@ function setA(d, gid, t, ts, isOpw, isCool) {
   state.rooster[d] = state.rooster[d].filter(r => !(r.groepId === gid && r.time === t));
   if (ts) state.rooster[d].push({groepId: gid, time: t, toestel: ts, isOpwarming: !!isOpw, isCooldown: !!isCool});
   setTimeout(renderConflictPanel, 50);
+  markDirty();
 }
 
 function totOp(d, t, ts) {
@@ -1003,6 +1004,7 @@ function saveGroep(id) {
   }
   closeModal();
   renderGroepen();
+  markDirty();
 }
 
 // ═══════════════════════════════════════════
@@ -1776,23 +1778,18 @@ function runSolver() {
   }
 
   function buildRotation(nSlots, maxBlok, todayVerplicht, optioneel) {
-    const blockSize = Math.min(maxBlok, 2);
-    const plan = [];
-    let used = 0;
+    // Assign each toestel a block of exactly maxBlok slots, cycling through the list
     const allTs = [...todayVerplicht, ...optioneel.filter(t => !todayVerplicht.includes(t))];
-    for (const ts of allTs) {
-      if (used >= nSlots) break;
-      const cnt = Math.min(blockSize, nSlots - used);
-      plan.push({ts, count: cnt});
-      used += cnt;
-    }
-    if (used < nSlots && plan.length) {
-      const last = plan[plan.length - 1];
-      const add = Math.min(maxBlok - last.count, nSlots - used);
-      if (add > 0) { last.count += add; used += add; }
-    }
     const rot = [];
-    plan.forEach(p => { for (let i = 0; i < p.count; i++) rot.push(p.ts); });
+    let tsIndex = 0;
+    while (rot.length < nSlots) {
+      if (tsIndex >= allTs.length) tsIndex = 0; // cycle if more slots than toestellen
+      const ts = allTs[tsIndex];
+      const remaining = nSlots - rot.length;
+      const blockLen = Math.min(maxBlok, remaining);
+      for (let i = 0; i < blockLen; i++) rot.push(ts);
+      tsIndex++;
+    }
     return rot.slice(0, nSlots);
   }
 
@@ -2378,18 +2375,7 @@ function updateAutosaveStatus(msg, color) {
   if (el) { el.textContent = msg; el.style.color = color; }
 }
 
-// Hook markDirty in setA en saveGroep
-const _origSetA = setA;
-function setA(d, gid, t, ts, isOpw, isCool) {
-  _origSetA(d, gid, t, ts, isOpw, isCool);
-  markDirty();
-}
-
-const _origSaveGroep = saveGroep;
-function saveGroep(id) {
-  _origSaveGroep(id);
-  markDirty();
-}
+// markDirty is called directly inside setA and saveGroep
 
 // (autosave context already set inside doLoadCloud and doSaveCloud directly)
 
