@@ -1256,14 +1256,11 @@ function renderRooster() {
 
   // Rows
   times.forEach(t => {
-    // Toon toestellen waarop nog minstens één niet-ingeplande groep past
-    const activeG     = state.groepen.filter(g => g.dagen.includes(dag) && isActiveAtTime(g, t, dag));
-    const unassignedG = activeG.filter(g => !getA(dag, g.id, t));
-    const vrijNu = unassignedG.length === 0 ? [] : TOESTELLEN.filter(ts => {
-      const max      = state.regels.capaciteit[ts] || 99;
-      const used     = totOp(dag, t, ts);
-      const smallest = Math.min(...unassignedG.map(g => g.gymnasten));
-      return used + smallest <= max;
+    // Toon toestellen met nog vrije capaciteit (altijd, ook als iedereen ingepland is)
+    const vrijNu = TOESTELLEN.filter(ts => {
+      const max  = state.regels.capaciteit[ts] || 99;
+      const used = totOp(dag, t, ts);
+      return used < max;
     });
     const vrijHtml = vrijNu.map(ts => {
       const used = totOp(dag, t, ts);
