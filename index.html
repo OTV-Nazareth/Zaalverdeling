@@ -1254,11 +1254,11 @@ function renderRooster() {
 
   // Rows
   times.forEach(t => {
-    const activeG     = state.groepen.filter(g => g.dagen.includes(dag) && isActiveAtTime(g, t, dag));
-    const unassignedG = activeG.filter(g => !getA(dag, g.id, t));
-    const vrijNu = unassignedG.length === 0 ? [] : TOESTELLEN.filter(ts => {
-      const smallest = Math.min(...unassignedG.map(g => g.gymnasten));
-      return totOp(dag, t, ts) + smallest <= (state.regels.capaciteit[ts] || 99);
+    // Toon toestellen die nog ruimte hebben (ongeacht of groepen al ingepland zijn)
+    const vrijNu = TOESTELLEN.filter(ts => {
+      const max  = state.regels.capaciteit[ts] || 99;
+      const used = totOp(dag, t, ts);
+      return used < max;
     });
     const vrijHtml = vrijNu.map(ts =>
       `<span class="slot ${TS_CLASS[ts]||''}" style="font-size:9px;padding:1px 4px;margin:1px;display:inline-block">${SHORT[ts]}</span>`
