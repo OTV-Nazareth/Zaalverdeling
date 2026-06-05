@@ -2381,20 +2381,7 @@ function saveGroep(id) {
   markDirty();
 }
 
-const _origDoLoadCloud = doLoadCloud;
-async function doLoadCloud(id, naam) {
-  await _origDoLoadCloud(id, naam);
-  _autosaveId    = id;
-  _autosaveName  = naam;
-  _autosaveDirty = false;
-  updateAutosaveStatus(`📂 Geladen: ${naam}`, '#16a34a');
-}
-
-const _origDoSaveCloud = doSaveCloud;
-async function doSaveCloud(existingId) {
-  await _origDoSaveCloud(existingId);
-  _autosaveDirty = false;
-}
+// (autosave context already set inside doLoadCloud and doSaveCloud directly)
 
 // ═══════════════════════════════════════════
 // INITIALISATIE
